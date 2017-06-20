@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     ALLEGRO_DISPLAY *main_display = NULL;
     ALLEGRO_BITMAP *image = NULL;
     
-    if(al_init()) 
+    if(!al_init()) 
     {
         DisplayError(NULL, "Erro fatal", "Erro ao carregar o allegro5", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         exit(-1);
