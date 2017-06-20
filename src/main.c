@@ -16,6 +16,7 @@ int main(int argc, char **argv)
 
     ALLEGRO_DISPLAY *main_display = NULL;
     ALLEGRO_BITMAP *image = NULL;
+    ALLEGRO_EVENT_QUEUE *event_queue = NULL;
     
     if(!al_init()) 
     {
@@ -37,6 +38,16 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
+    event_queue = al_create_event_queue();
+    if(!event_queue) 
+    {
+        DisplayError(NULL, "Erro fatal", "Erro ao inicializar fila de eventos", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        al_destroy_display(main_display);
+        exit(-1);
+    }
+
+    al_register_event_source(event_queue, al_get_display_event_source(main_display));
+
     al_clear_to_color(al_map_rgb(255,255,255));
 
     image = load_image("../img/icon.png");
@@ -45,10 +56,24 @@ int main(int argc, char **argv)
 
     al_flip_display();
 
-    al_rest(10.0);
+    while(1)
+    {
+        ALLEGRO_EVENT ev;
+        ALLEGRO_TIMEOUT timeout;
+        
+        al_init_timeout(&timeout, 0.06);
+
+        bool get_event = al_wait_for_event_until(event_queue, &ev, &timeout);
+
+        if(get_event && ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) 
+        {
+            break;
+        }
+    }
 
     al_destroy_display(main_display);
     
     al_destroy_bitmap(image);
+
     return 0;
 }
