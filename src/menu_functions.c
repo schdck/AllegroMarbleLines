@@ -38,11 +38,11 @@ void ExibirJanelaMenu()
 
     al_register_event_source(event_queue, al_get_display_event_source(main_display));
 
-    al_clear_to_color(al_map_rgb(255,255,255));
+    al_clear_to_color(al_map_rgb(125,125,125));
 
-    image = load_image("../img/icon.png");
+    image = load_image("../img/logo.jpg");
 
-    al_draw_bitmap(image, 0, 0, 0);
+    al_draw_bitmap(image, 280, 50, 0);
 
     al_flip_display();
 
