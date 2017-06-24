@@ -3,4 +3,6 @@
 
 char *join_strings(const char *str1, const char *str2);
 
+char *convert_int(int i);
+
 #endif // __UTILS_H_

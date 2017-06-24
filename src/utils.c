@@ -12,3 +12,29 @@ char *join_strings(const char *str1, const char *str2)
 
     return str;
 }
+
+char *convert_int(int n)
+{
+    int digits = 1, copy = n;
+
+    while(copy >= 10)
+    {
+        digits++;
+
+        copy /= 10;
+    }
+
+    char *str = (char *) malloc(digits * sizeof(char));
+
+    str[digits--] = 0;
+
+    while(n >= 10)
+    {
+        str[digits--] = (n % 10) + '0';
+        n /= 10;
+    }
+
+    str[digits] = (n % 10) + '0';
+
+    return str;
+}

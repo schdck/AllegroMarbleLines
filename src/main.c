@@ -14,6 +14,11 @@
 
 int main(int argc, char **argv)
 {  
+    if(!InicializarAllegro())
+    {
+        exit(-1);
+    }
+
     ExibirJanelaMenu();
 
     return 0;
