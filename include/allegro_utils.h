@@ -3,6 +3,8 @@
 
 void DisplayError(ALLEGRO_DISPLAY *display, const char *title, const char *subtitle, const char *message);
 
+bool DisplayYesNoConfirmation(ALLEGRO_DISPLAY *display, const char *title, const char *subtitle, const char *message);
+
 int InicializarAllegro();
 
 struct ALLEGRO_BITMAP *load_image(const char *path);

@@ -3,21 +3,28 @@
 #include <string.h>
 #include <math.h>
 
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+
 #include "../include/constants.h"
 #include "../include/utils.h"
+#include "../include/allegro_utils.h"
 #include "../include/menu_functions.h"
+#include "../include/game_functions.h"
 
 void menu_DesenharImagens(int highlightIndex)
 {
+    int currentX = (MENU_WIDTH - 710) / 2, currentY = 225, increment = 70;
+
     // Desenhar o logo
     ALLEGRO_BITMAP *image = load_image(LOGO_PATH);
-    al_draw_bitmap(image, 45, 45, 0);
+    al_draw_bitmap(image, currentX, 45, 0);
 
     // Até 10 imagens, caso contrário será necessário adaptar a forma em que elas são carregadas
     const int quantidadeDeImagens = 6;
     const char *imgsPath = "../img/menu/";
-
-    int currentX = 45, currentY = 225, increment = 70;
 
     for(int i = 1; i < quantidadeDeImagens; i++)
     {
@@ -48,8 +55,9 @@ void ExibirJanelaMenu()
 {
     ALLEGRO_DISPLAY *main_display = NULL;
     ALLEGRO_EVENT_QUEUE *event_queue = NULL;
+    ALLEGRO_FONT *default_font = NULL;
 
-    main_display = al_create_display(800, 600);
+    main_display = al_create_display(MENU_WIDTH, MENU_HEIGHT);
 
     if(!main_display) 
     {
@@ -69,6 +77,29 @@ void ExibirJanelaMenu()
     if(!event_queue) 
     {
         DisplayError(NULL, "Erro fatal", "Erro ao inicializar fila de eventos", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        al_destroy_display(main_display);
+        exit(-1);
+    }
+
+    if (!al_init_font_addon())
+    {
+        DisplayError(NULL, "Erro fatal", "Erro ao inicializar extensão de fontes", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        al_destroy_display(main_display);
+        exit(-1);
+    }
+ 
+    if (!al_init_ttf_addon())
+    {
+        DisplayError(NULL, "Erro fatal", "Erro ao inicializar extensão de fontes TTF", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        al_destroy_display(main_display);
+        exit(-1);
+    }
+
+    default_font = al_load_font("../font/default_font.ttf", 24, 0);
+
+    if (!default_font)
+    {
+        DisplayError(NULL, "Erro fatal", "Erro ao carregar fonte padrão", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
         exit(-1);
     }
@@ -126,7 +157,24 @@ void ExibirJanelaMenu()
                 switch(highlightIndex)
                 {
                     case 1:
-                        DisplayError(NULL, "", "Iniciar novo jogo", "");
+                        al_clear_to_color(al_map_rgb(101, 101, 101));
+
+                        al_draw_textf(default_font, al_map_rgb(0, 0, 0), MENU_WIDTH / 2, MENU_HEIGHT / 2, ALLEGRO_ALIGN_CENTER, "Jogando...");
+
+                        al_flip_display();
+
+                        int x, y;
+                        al_get_window_position(main_display, &x, &y);
+
+                        ExibirJanelaJogo(x + 50, y + 50);
+
+                        al_set_target_backbuffer(main_display); 
+
+                        while(al_get_next_event(event_queue, &event))
+                        {
+                            // Esvaziar a lista de eventos
+                        }
+
                         break;
                     case 2:
                         DisplayError(NULL, "", "Recordes", "");

@@ -1,5 +1,19 @@
 {
     "files.associations": {
-        "limits": "cpp"
+        "limits": "cpp",
+        "menu_functions.h": "c",
+        "stdlib.h": "c",
+        "string.h": "c",
+        "allegro_image.h": "c",
+        "astdbool.h": "c",
+        "game_functions.c": "cpp",
+        "bitmap.h": "c",
+        "allegro_font.h": "c",
+        "stdio2.h": "c",
+        "allegro_ttf.h": "c",
+        "allegro_utils.c": "cpp",
+        "constants.h": "c",
+        "monitor.h": "c",
+        "events.h": "c"
     }
 }

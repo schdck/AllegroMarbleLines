@@ -10,10 +10,12 @@
 #include "../include/allegro_utils.h"
 #include "../include/menu_functions.h"
 
-// g++ -o ../app allegro_utils.c menu_functions.c main.c utils.c -I/usr/include/allegro5 -L/usr/lib -lallegro -lallegro_image -lallegro_dialog
+// g++ -o ../app *.c -I/usr/include/allegro5 -L/usr/lib -lallegro -lallegro_image -lallegro_dialog -lallegro_font -lallegro_ttf
 
 int main(int argc, char **argv)
 {  
+    srand(time(NULL));
+
     if(!InicializarAllegro())
     {
         exit(-1);
