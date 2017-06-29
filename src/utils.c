@@ -28,13 +28,23 @@ char *convert_int(int n)
 
     str[digits--] = 0;
 
-    while(n >= 10)
+    if(n >= 0)
     {
-        str[digits--] = (n % 10) + '0';
-        n /= 10;
-    }
+        while(n >= 10)
+        {
+            str[digits--] = (n % 10) + '0';
+            n /= 10;
+        }
 
-    str[digits] = (n % 10) + '0';
+        str[digits] = (n % 10) + '0';
+    }
+    else
+    {
+        while(digits >= 0)
+        {
+            str[digits--] = '-';
+        }
+    }
 
     return str;
 }
