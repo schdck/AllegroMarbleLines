@@ -11,6 +11,14 @@
 #include "../include/allegro_utils.h"
 #include "../include/game_functions.h"
 
+static ushort PROJECTILE_SPEED;
+static ushort BALLS_SPEED;
+static ushort GAME_MODE;
+static ushort LEVEL;
+static int PLAYER_SCORE;
+
+bool Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font);
+
 struct PROJECTILE GenerateRandomProjectile()
 {
     const int AMOUNT_OF_COLORS = 3;
@@ -28,7 +36,7 @@ struct PROJECTILE GenerateRandomProjectile()
     return p;
 }
 
-void ExibirJanelaJogo(int X, int Y)
+void ExibirJanelaJogo(int X, int Y, ushort game_mode, ushort level, ushort projectile_speed, ushort balls_speed)
 {
     ALLEGRO_DISPLAY *game_display;
     ALLEGRO_EVENT_QUEUE *game_event_queue;
@@ -81,6 +89,25 @@ void ExibirJanelaJogo(int X, int Y)
     al_register_event_source(game_event_queue, al_get_display_event_source(game_display));
     al_register_event_source(game_event_queue, al_get_mouse_event_source());
 
+    PROJECTILE_SPEED = projectile_speed;
+    BALLS_SPEED = balls_speed;
+    LEVEL = level;
+    GAME_MODE = game_mode;
+
+    PLAYER_SCORE = 0;
+
+    while(Jogar(game_display, game_event_queue, game_font))
+    {
+        // XXX Exibir informações (posição no ranking, pontos, etc.)
+    }
+
+    al_destroy_font(game_font);
+    al_destroy_event_queue(game_event_queue);
+    al_destroy_display(game_display);
+}
+
+bool Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font)
+{
     bool leave_game = false, fired_ball = false, ball_on_way = false;
 
     int mouseX = 0, mouseY = 0;
@@ -98,11 +125,11 @@ void ExibirJanelaJogo(int X, int Y)
         fps_start = al_get_time();
         // Início laço de atualização da tela
 
-        while(!al_event_queue_is_empty(game_event_queue))
+        while(!al_event_queue_is_empty(event_queue))
         {
             ALLEGRO_EVENT event;
 
-            al_wait_for_event(game_event_queue, &event);
+            al_wait_for_event(event_queue, &event);
 
             if(event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
             {
@@ -118,25 +145,46 @@ void ExibirJanelaJogo(int X, int Y)
                 fired_ball = true;
 
                 double deltaX = mouseX - (GAME_WIDTH / 2);
-                double deltaY = mouseY - (GAME_WIDTH / 2);
+                double deltaY = mouseY - (GAME_HEIGHT / 2);
 
                 double rotation_angle = atan2(deltaX, deltaY) * -1 + M_PI;
 
-                speedX = sin(rotation_angle) * GAME_PROJECTILE_SPEED;
-                speedY = cos(rotation_angle) * -GAME_PROJECTILE_SPEED;
+                speedX = sin(rotation_angle) * PROJECTILE_SPEED;
+                speedY = cos(rotation_angle) * -PROJECTILE_SPEED;
             }
         }
 
-        //ALLEGRO_BITMAP *background = load_image("../img/game/background.png");
+        ALLEGRO_BITMAP *background;
+
+        switch(LEVEL)
+        {
+            case 1:
+                background = load_image("../img/game/level_1.png");
+                break;
+            case 2:
+                background = load_image("../img/game/level_2.png");
+                break;
+            case 3:
+                background = load_image("../img/game/level_3.png");
+                break;
+            case 4:
+                background = load_image("../img/game/level_4.png");
+                break;
+        }
+
+        ALLEGRO_BITMAP *cannon_bg = load_image("../img/game/cannon_bg.png");
         ALLEGRO_BITMAP *cannon = load_image("../img/game/cannon.png");
 
         double rotation_angle = atan2f(mouseX - (GAME_WIDTH / 2), mouseY - (GAME_HEIGHT / 2)) * -1 + M_PI;
 
         al_clear_to_color(al_map_rgb(101,101,101));
-        //al_draw_bitmap(background, 0, 0, 0);
+        al_draw_bitmap(background, 0, 0, 0);
+
         al_draw_line(GAME_WIDTH / 2, GAME_HEIGHT / 2, mouseX, mouseY, al_map_rgb(255,0,0), 3.0);
-        al_draw_rotated_bitmap(cannon, 61, 61, GAME_WIDTH / 2, GAME_HEIGHT / 2, rotation_angle, 0);
-        al_draw_multiline_textf(game_font, al_map_rgb(0, 0, 0), mouseX + 15, mouseY + 15, 300.0, 12.0, ALLEGRO_ALIGN_LEFT, "angle %.2frad (%.2fdeg)\nsin %.2f\ncos %.2f", rotation_angle, rotation_angle * 57.2958, sin(rotation_angle), cos(rotation_angle));
+        al_draw_bitmap(cannon_bg, GAME_WIDTH / 2 - 53, GAME_HEIGHT / 2 - 53, 0);
+        al_draw_rotated_bitmap(cannon, 53, 53, GAME_WIDTH / 2, GAME_HEIGHT / 2, rotation_angle - M_PI, 0);
+        al_draw_multiline_textf(font, al_map_rgb(0, 0, 0), mouseX + 15, mouseY + 15, 300.0, 12.0, ALLEGRO_ALIGN_LEFT, "angle %.2frad (%.2fdeg)\nsin %.2f\ncos %.2f", rotation_angle, rotation_angle * 57.2958, sin(rotation_angle), cos(rotation_angle));
+        al_draw_multiline_textf(font, al_map_rgb(0, 0, 0), 5, 5, 300.0, 12.0, ALLEGRO_ALIGN_LEFT, "NÍVEL: %d\nPONTOS: %d", LEVEL, PLAYER_SCORE);
 
         if(fired_ball)
         {
@@ -147,11 +195,11 @@ void ExibirJanelaJogo(int X, int Y)
             fired_ball = false;
         }
 
-        current_projectile.x = (GAME_WIDTH / 2) + (sin(rotation_angle) * 47);
-        current_projectile.y = (GAME_HEIGHT / 2) + (cos(rotation_angle) * -47);
+        current_projectile.x = (GAME_WIDTH / 2) + (sin(rotation_angle) * 55);
+        current_projectile.y = (GAME_HEIGHT / 2) + (cos(rotation_angle) * -55);
 
-        next_projectile.x = (GAME_WIDTH / 2) + (sin(rotation_angle) * 21);
-        next_projectile.y = (GAME_HEIGHT / 2) + (cos(rotation_angle) * -21);
+        next_projectile.x = (GAME_WIDTH / 2) + (sin(rotation_angle) * -35);
+        next_projectile.y = (GAME_HEIGHT / 2) + (cos(rotation_angle) * 35);
 
         al_draw_filled_circle(current_projectile.x, current_projectile.y, 13, current_projectile.color);
         al_draw_filled_circle(next_projectile.x, next_projectile.y, 7, next_projectile.color);
@@ -160,7 +208,12 @@ void ExibirJanelaJogo(int X, int Y)
         {
             if(on_way_projectile.x > GAME_WIDTH || on_way_projectile.y > GAME_HEIGHT || on_way_projectile.x < 0 || on_way_projectile.y < 0)
             {
+                PLAYER_SCORE -= 7;
                 ball_on_way = false;
+            }
+            else if(0) // XXX detectar colisão
+            {
+
             }
             else
             {
@@ -173,7 +226,8 @@ void ExibirJanelaJogo(int X, int Y)
 
         al_flip_display();
 
-        //al_destroy_bitmap(background);
+        al_destroy_bitmap(background);
+        al_destroy_bitmap(cannon_bg);
         al_destroy_bitmap(cannon);
 
         // Final laço de atualização da tela
@@ -184,7 +238,4 @@ void ExibirJanelaJogo(int X, int Y)
             al_rest((1.0 / GAME_FPS) - fps_difference);
         }
     }
-
-    al_destroy_event_queue(game_event_queue);
-    al_destroy_display(game_display);
 }

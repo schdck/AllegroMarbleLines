@@ -10,7 +10,7 @@
 #include "../include/allegro_utils.h"
 #include "../include/menu_functions.h"
 
-// g++ -o ../app *.c -I/usr/include/allegro5 -L/usr/lib -lallegro -lallegro_image -lallegro_dialog -lallegro_font -lallegro_ttf
+// g++ -o ../app *.c -I/usr/include/allegro5 -L/usr/lib -lallegro -lallegro_image -lallegro_dialog -lallegro_font -lallegro_ttf -lallegro_primitives
 
 int main(int argc, char **argv)
 {  

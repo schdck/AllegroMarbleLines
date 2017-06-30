@@ -166,14 +166,11 @@ void ExibirJanelaMenu()
                         int x, y;
                         al_get_window_position(main_display, &x, &y);
 
-                        ExibirJanelaJogo(x + 50, y + 50);
+                        ExibirJanelaJogo(x + 50, y + 50, GAME_MODE_NORMAL, 1, 15, 20);
 
                         al_set_target_backbuffer(main_display); 
 
-                        while(al_get_next_event(event_queue, &event))
-                        {
-                            // Esvaziar a lista de eventos
-                        }
+                        while(al_get_next_event(event_queue, &event)) { } // Esvaziar a fila de eventos
 
                         break;
                     case 2:
