@@ -16,11 +16,14 @@
 
 void menu_DesenharImagens(int highlightIndex)
 {
+    write_log(DEBUG_LEVEL_INFO, "Iniciando a função DesenharImagens.\n");
+
     int currentX = (MENU_WIDTH - 710) / 2, currentY = 225, increment = 70;
 
     // Desenhar o logo
     ALLEGRO_BITMAP *image = load_image(LOGO_PATH);
     al_draw_bitmap(image, currentX, 45, 0);
+    al_destroy_bitmap(image);
 
     // Até 10 imagens, caso contrário será necessário adaptar a forma em que elas são carregadas
     const int quantidadeDeImagens = 6;
@@ -41,18 +44,26 @@ void menu_DesenharImagens(int highlightIndex)
 
         fileName[3] = i + '0';
 
-        image = load_image(join_strings(imgsPath, fileName));
+        char *str =strjoin(imgsPath, fileName);
+
+        image = load_image(str);
+
+        free(str);
 
         al_draw_bitmap(image, currentX, currentY, 0);
+
+        al_destroy_bitmap(image); 
 
         currentY += increment;
     }
 
-    al_destroy_bitmap(image); 
+    write_log(DEBUG_LEVEL_INFO, "Deixando a função DesenharImagens.\n");
 }
 
 void ExibirJanelaMenu()
 {
+    write_log(DEBUG_LEVEL_INFO, "Iniciando a função ExibirJanelaMenu.\n");
+
     ALLEGRO_DISPLAY *main_display = NULL;
     ALLEGRO_EVENT_QUEUE *event_queue = NULL;
     ALLEGRO_FONT *default_font = NULL;
@@ -62,14 +73,14 @@ void ExibirJanelaMenu()
     if(!main_display) 
     {
         DisplayError(NULL, "Erro fatal", "Erro ao criar o display principal", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     if(!al_set_system_mouse_cursor(main_display, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT))
     {
         DisplayError(NULL, "Erro fatal", "Erro ao inicializar ponteiro do mouse", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     event_queue = al_create_event_queue();
@@ -78,21 +89,21 @@ void ExibirJanelaMenu()
     {
         DisplayError(NULL, "Erro fatal", "Erro ao inicializar fila de eventos", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     if (!al_init_font_addon())
     {
         DisplayError(NULL, "Erro fatal", "Erro ao inicializar extensão de fontes", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
  
     if (!al_init_ttf_addon())
     {
         DisplayError(NULL, "Erro fatal", "Erro ao inicializar extensão de fontes TTF", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     default_font = al_load_font("../font/default_font.ttf", 24, 0);
@@ -101,7 +112,7 @@ void ExibirJanelaMenu()
     {
         DisplayError(NULL, "Erro fatal", "Erro ao carregar fonte padrão", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     al_set_window_title(main_display, "Menu - AllegroMarbleLines");
@@ -191,4 +202,6 @@ void ExibirJanelaMenu()
     }
 
     al_destroy_display(main_display);
+
+    write_log(DEBUG_LEVEL_INFO, "Deixando a função ExibirJanelaMenu.\n");
 }

@@ -14,6 +14,9 @@
         "allegro_utils.c": "cpp",
         "constants.h": "c",
         "monitor.h": "c",
-        "events.h": "c"
+        "events.h": "c",
+        "game_functions.h": "c",
+        "utils.c": "cpp",
+        "color.h": "c"
     }
 }

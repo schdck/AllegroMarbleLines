@@ -47,7 +47,7 @@ struct ALLEGRO_BITMAP *load_image(const char *path)
 
     if(image == NULL)
     {
-        DisplayError(NULL, "Erro fatal", join_strings("Erro ao carregar a imagem ", path), "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        DisplayError(NULL, "Erro fatal", strjoin("Erro ao carregar a imagem ", path), "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         exit(-1);
     }
 

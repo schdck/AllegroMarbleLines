@@ -18,10 +18,10 @@ int main(int argc, char **argv)
 
     if(!InicializarAllegro())
     {
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     ExibirJanelaMenu();
 
-    return 0;
+    exit(EXIT_SUCCESS);
 }

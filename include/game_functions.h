@@ -1,10 +1,25 @@
 #ifndef __GAME_FUNCTIONS_H_
 #define __GAME_FUNCTIONS_H_
 
-struct PROJECTILE {
+struct POINT {
     double x;
     double y;
+};
+
+struct PROJECTILE {
+    POINT cord;
     ALLEGRO_COLOR color;
+    int position;
+};
+
+struct TRACK {
+    POINT *path;
+    int track_length;
+};
+
+struct MAP_INFO {
+    TRACK *tracks;
+    int map_length;
 };
 
 void ExibirJanelaJogo(int X, int Y, ushort game_mode, ushort level, ushort projectile_speed, ushort balls_speed);

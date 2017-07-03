@@ -1,9 +1,13 @@
+#include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <time.h>
 #include <string.h>
 
+#include "../include/constants.h"
 #include "../include/utils.h"
 
-char *join_strings(const char *str1, const char *str2)
+char *strjoin(const char *str1, const char *str2)
 {
     char *str = (char *) malloc((strlen(str1) + strlen(str2)) * sizeof(char));
 
@@ -47,4 +51,31 @@ char *convert_int(int n)
     }
 
     return str;
+}
+
+void write_log(int debug_level, const char *str, ...)
+{
+    if(debug_level <= CURRENT_DEBUG_LEVEL && debug_level > 0)
+    {
+        switch(debug_level)
+        {
+            case DEBUG_LEVEL_INFO:
+                fprintf(stderr, "[%s] ", "INFO");
+                break;
+            
+            case DEBUG_LEVEL_WARNING:
+                fprintf(stderr, "[%s] ", "WARN");
+                break;
+
+            case DEBUG_LEVEL_ERROR:
+                fprintf(stderr, "[%s] ", "ERRO");
+                break;
+        }
+
+        va_list arglist;
+        va_start(arglist, str);
+        vfprintf(stderr, str, arglist);
+        va_end(arglist);
+        fprintf(stderr, "\n");
+    }
 }
