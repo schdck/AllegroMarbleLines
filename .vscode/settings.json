@@ -17,6 +17,9 @@
         "events.h": "c",
         "game_functions.h": "c",
         "utils.c": "cpp",
-        "color.h": "c"
+        "color.h": "c",
+        "allegro_primitives.h": "c",
+        "mouse.h": "c",
+        "touch_input.h": "c"
     }
 }

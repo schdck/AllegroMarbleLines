@@ -20,7 +20,7 @@ static int PLAYER_SCORE;
 
 int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font);
 
-struct PROJECTILE GenerateRandomProjectile()
+struct ALLEGRO_COLOR GenerateRandomColor()
 {
     const int AMOUNT_OF_COLORS = 3;
 
@@ -30,16 +30,12 @@ struct PROJECTILE GenerateRandomProjectile()
         al_map_rgb(0, 0, 255)
     };
 
-    PROJECTILE p;
-
-    p.color = colors[rand() % AMOUNT_OF_COLORS];
-
-    return p;
+    return colors[rand() % AMOUNT_OF_COLORS];
 }
 
 void ExibirJanelaJogo(int X, int Y, ushort game_mode, ushort level, ushort projectile_speed, ushort balls_speed)
 {
-    write_log(DEBUG_LEVEL_INFO, "Iniciando a função ExibirJanelaJogo.\n");
+    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função ExibirJanelaJogo.");
 
     ALLEGRO_DISPLAY *game_display;
     ALLEGRO_EVENT_QUEUE *game_event_queue;
@@ -115,12 +111,12 @@ void ExibirJanelaJogo(int X, int Y, ushort game_mode, ushort level, ushort proje
     al_destroy_event_queue(game_event_queue);
     al_destroy_display(game_display);
 
-    write_log(DEBUG_LEVEL_INFO, "Deixando a função ExibirJanelaJogo.\n");
+    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função ExibirJanelaJogo.");
 }
 
 void CarregarLevel(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **map_info)
 {
-    write_log(DEBUG_LEVEL_INFO, "Iniciando a função CarregarLevel.\n");
+    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função CarregarLevel.");
 
     char file_name[] = "level_x.csv";
 
@@ -146,7 +142,7 @@ void CarregarLevel(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **m
 
     level_info = fopen(strjoin("../data/", file_name), "r");
 
-    int points_in_track = 0, amount_of_tracks = 1, track_lenght[GAME_MAX_TRACKS];
+    int points_in_track = 0, amount_of_tracks = 0, track_lenght[GAME_MAX_TRACKS];
 
     for(int i = 0; i < GAME_MAX_TRACKS; i++)
     {
@@ -157,86 +153,123 @@ void CarregarLevel(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **m
     {
         points_in_track++;
 
-        if(line[0] == '#')
+        if(line[0] == '-')
         {
-            track_lenght[amount_of_tracks - 1] = points_in_track - 1;
+            track_lenght[amount_of_tracks] = points_in_track - 1;
 
             points_in_track = 0;
             amount_of_tracks++;
         }
     }
 
-    track_lenght[amount_of_tracks - 1] = points_in_track;
-
+    track_lenght[amount_of_tracks] = points_in_track;
     (*map_info) = (MAP_INFO *) malloc(sizeof(MAP_INFO));
     (*map_info)->map_length = amount_of_tracks;
+    
     (*map_info)->tracks = (TRACK *) malloc(amount_of_tracks * sizeof(TRACK));
 
-    fprintf(stderr, "***** LEVEL INFO *****\nfile_name: %s\namount_of_tracks: %d\n", file_name, amount_of_tracks);
+    
+
+    write_log(DEBUG_LEVEL_INFO, false, "***** LEVEL [INFO] *****\nFile name: %s\nAmount of tracks: %d\n", file_name, amount_of_tracks);
 
     for(int i = 0; i < amount_of_tracks; i++)
     {
         (*map_info)->tracks[i].track_length = track_lenght[i];
+        
         (*map_info)->tracks[i].path = (POINT *) malloc(sizeof(POINT) * track_lenght[i]);
-
-        fprintf(stderr, "Track %d: %d points\n", i, track_lenght[i]);
     }
-
-    fprintf(stderr, "**********************\n");
 
     // Voltar ao início do arquivo
     rewind(level_info);
 
-    int position = 0, track = 0;
+    int position = 0, track = 0, point_x, point_y;
 
     POINT *p = &(*map_info)->tracks[0].path[0];
 
-    while (getline(&line, &line_length, level_info) != -1)
+    while(fscanf(level_info, "%d,%d", &point_x, &point_y) == 2)
     {
-        p = &(*map_info)->tracks[track].path[position];
+        fprintf(stderr, "%d, %d\n", point_x, point_y);
 
-        if(line[0] == '#')
+        if(point_x >= 0 && point_y >= 0)
         {
+            p = &(*map_info)->tracks[track].path[position++];
+
+            p->x = point_x;
+            p->y = point_y;
+        }
+        else
+        {
+            write_log(DEBUG_LEVEL_INFO, true, "Leitura da track %d concluída (%d pontos).", track, (*map_info)->tracks[track].track_length);
+
             track++;
             position = 0;
         }
-        else
-        {        
-            p->x = 5;
-            p->y = 5;
-
-            position++;
-        }
     }
+
+    fprintf(stderr, "Chega aqui?");
 
     fclose(level_info);
 
-    write_log(DEBUG_LEVEL_INFO, "Deixando a função CarregarLevel.\n");
+    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função CarregarLevel.");
 }
 
 int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font)
 {
-    write_log(DEBUG_LEVEL_INFO, "Iniciando a função Jogar.\n");
+    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função Jogar.");
 
-    bool fired_ball = false, ball_on_way = false;
+    bool fired_ball = false, ball_on_way = false, hold = false;
 
-    int mouseX = 0, mouseY = 0, game_return_code = -1;
-    
+    int mouseX = 0, mouseY = 0, game_return_code = -1, ultima_atualizacao_posicao = 0;
+
     double speedX, speedY;
 
     double fps_start, fps_difference;
 
     struct MAP_INFO *map_info = NULL;
 
-    PROJECTILE current_projectile = GenerateRandomProjectile(),
-               next_projectile = GenerateRandomProjectile(),
-               on_way_projectile;
-
-    ALLEGRO_BITMAP *background = load_image("../img/game/cannon_bg.png");
+    ALLEGRO_BITMAP *background;
     ALLEGRO_BITMAP *cannon_bg = load_image("../img/game/cannon_bg.png");
     ALLEGRO_BITMAP *cannon = load_image("../img/game/cannon.png");
 
-    //CarregarLevel(&background, &map_info);
+    CarregarLevel(&background, &map_info);
+
+    /*
+    for(int i = 0; i < map_info->map_length; i++)
+    {
+        for(int j = 0; j < map_info->tracks[i].track_length; j++)
+        {
+            POINT p = map_info->tracks[i].path[j];
+
+            fprintf(stderr, "Ponto %d da track %d: %.2f %.2f\n", j, i, p.x, p.y);
+        }
+    }
+    */
+
+    PROJECTILE current_projectile,
+               next_projectile,
+               on_way_projectile,
+               *projectiles_at_track[map_info->map_length];
+
+    current_projectile.color = GenerateRandomColor();
+    next_projectile.color = GenerateRandomColor();
+
+    int projectiles_per_track[map_info->map_length];
+    int created_projectiles[map_info->map_length];
+
+    for(int i = 0; i < map_info->map_length; i++)
+    {
+        projectiles_per_track[i] = (map_info->tracks[i].track_length / (GAME_PROJECTILE_RADIUS * 2));
+        projectiles_at_track[i] = (PROJECTILE *) malloc(projectiles_per_track[i] * sizeof(PROJECTILE));
+        created_projectiles[i] = 0;
+
+        for(int j = 0; j < projectiles_per_track[i]; j++)
+        {
+            projectiles_at_track[i][j].cord.x = -1;
+            projectiles_at_track[i][j].cord.y = -1;
+
+            //fprintf(stderr, "Corrdenadas do ponto %d da trilha %d: %.2f, %.2f\n", j, i, projectiles_at_track[i][j].cord.x, projectiles_at_track[i][j].cord.y);
+        }
+    }
 
     while(game_return_code == -1)
     {
@@ -293,7 +326,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
         {
             on_way_projectile = current_projectile;
             current_projectile = next_projectile;
-            next_projectile = GenerateRandomProjectile();
+            next_projectile.color = GenerateRandomColor();
             ball_on_way = true;
             fired_ball = false;
         }
@@ -304,8 +337,8 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
         next_projectile.cord.x = (GAME_WIDTH / 2) + (sin(rotation_angle) * -35);
         next_projectile.cord.y = (GAME_HEIGHT / 2) + (cos(rotation_angle) * 35);
 
-        al_draw_filled_circle(current_projectile.cord.x, current_projectile.cord.y, 13, current_projectile.color);
-        al_draw_filled_circle(next_projectile.cord.x, next_projectile.cord.y, 7, next_projectile.color);
+        al_draw_filled_circle(current_projectile.cord.x, current_projectile.cord.y, GAME_PROJECTILE_RADIUS, current_projectile.color);
+        al_draw_filled_circle(next_projectile.cord.x, next_projectile.cord.y, GAME_NEXT_PROJECTILE_RADIUS, next_projectile.color);
 
         if(ball_on_way)
         {
@@ -323,7 +356,90 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                 on_way_projectile.cord.x += speedX;
                 on_way_projectile.cord.y += speedY;
 
-                al_draw_filled_circle(on_way_projectile.cord.x, on_way_projectile.cord.y, 13, on_way_projectile.color);
+                al_draw_filled_circle(on_way_projectile.cord.x, on_way_projectile.cord.y, GAME_PROJECTILE_RADIUS, on_way_projectile.color);
+            }
+        }
+
+        if(!hold)
+        {
+            if(ultima_atualizacao_posicao <= 0)
+            {
+                ultima_atualizacao_posicao = GAME_FPS / BALLS_SPEED;
+
+                for(int i = 0; i < map_info->map_length; i++)
+                {
+                    PROJECTILE *p;
+
+                    for(int j = 0; j < created_projectiles[i]; j++)
+                    {
+                        p = &projectiles_at_track[i][j];
+
+                        p->position++;
+
+                        if(p->position == map_info->tracks[i].track_length)
+                        {
+                            fprintf(stderr, "GAME OVER!\n");
+                        }
+                        else
+                        {
+                            p->cord = map_info->tracks[i].path[p->position];
+                        }
+                    }
+
+                    bool create_new_projectile = false;
+
+                    if(created_projectiles[i] > 0)
+                    {
+                        POINT n = projectiles_at_track[i][0].cord,
+                              s = map_info->tracks[i].path[0];
+
+                        double distance = distance_between_points(s.x, s.y, n.x, n.y);
+
+                        //fprintf(stderr, "d((%.2f, %.2f), (%.2f, %.2f)) = %.2f\n", s.x, s.y, n.x, n.y, distance_between_points(s.x, s.y, n.x, n.y));
+
+                        if(distance > GAME_PROJECTILE_RADIUS * 2 && created_projectiles[i] < projectiles_per_track[i])
+                        {
+                            for(int j = created_projectiles[i]; j > 0; j--)
+                            {
+                                write_log(DEBUG_LEVEL_ALL, true, "Deslocando projétil da trilha %d da posição %d para a posição %d", i, j, j - 1);
+
+                                projectiles_at_track[i][j] = projectiles_at_track[i][j - 1];
+                            }
+
+                            create_new_projectile = true;
+                        }                   
+                    }
+                    
+                    if(created_projectiles[i] == 0 || create_new_projectile)
+                    {
+                        p = &projectiles_at_track[i][0];
+                        p->position = 0;
+                        p->color = GenerateRandomColor();
+                        p->cord.x = map_info->tracks[i].path[0].x;
+                        p->cord.y = map_info->tracks[i].path[0].y;
+                        created_projectiles[i]++;
+
+                        write_log(DEBUG_LEVEL_ALL, true, "Novo projétil da track %d carregado para %.2f, %.2f", i, p->cord.x, p->cord.y);
+                    }
+                }
+            }
+
+            ultima_atualizacao_posicao--;
+        }
+            
+
+        for(int i = 0; i < map_info->map_length; i++)
+        {
+            for(int j = 0; j < projectiles_per_track[i]; j++)
+            {
+                PROJECTILE *p = &projectiles_at_track[i][j];
+                
+                if(p->cord.x < 0 && p->cord.y < 0)
+                {
+                    break;
+                }
+
+                al_draw_filled_circle(p->cord.x, p->cord.y, GAME_PROJECTILE_RADIUS, p->color);
             }
         }
 
@@ -342,15 +458,16 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
     al_destroy_bitmap(cannon_bg);
     al_destroy_bitmap(cannon);
 
-    //for(int i = 0; i < map_info->map_length; i++)
-    //{
-        //free(map_info->tracks[i].path);
-    //}
+    for(int i = 0; i < map_info->map_length; i++)
+    {
+        free(projectiles_at_track[i]);
+        free(map_info->tracks[i].path);
+    }
 
-    //free(map_info->tracks);
-    //free(map_info);
+    free(map_info->tracks);
+    free(map_info);
 
-    write_log(DEBUG_LEVEL_INFO, "Deixando a função Jogar.\n");
+    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função Jogar.");
 
     return game_return_code;
 }

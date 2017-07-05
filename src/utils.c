@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <string.h>
+#include <math.h>
 
 #include "../include/constants.h"
 #include "../include/utils.h"
@@ -53,23 +54,35 @@ char *convert_int(int n)
     return str;
 }
 
-void write_log(int debug_level, const char *str, ...)
+double distance_between_points(double x1, double y1, double x2, double y2)
+{
+    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+}
+
+void write_log(int debug_level, bool print_prefix, const char *str, ...)
 {
     if(debug_level <= CURRENT_DEBUG_LEVEL && debug_level > 0)
     {
-        switch(debug_level)
+        if(print_prefix)
         {
-            case DEBUG_LEVEL_INFO:
-                fprintf(stderr, "[%s] ", "INFO");
-                break;
-            
-            case DEBUG_LEVEL_WARNING:
-                fprintf(stderr, "[%s] ", "WARN");
-                break;
+            switch(debug_level)
+            {
+                case DEBUG_LEVEL_ALL:
+                    fprintf(stderr, "[%s] ", "ALL*");
+                    break;
 
-            case DEBUG_LEVEL_ERROR:
-                fprintf(stderr, "[%s] ", "ERRO");
-                break;
+                case DEBUG_LEVEL_INFO:
+                    fprintf(stderr, "[%s] ", "INFO");
+                    break;
+                
+                case DEBUG_LEVEL_WARNING:
+                    fprintf(stderr, "[%s] ", "WARN");
+                    break;
+
+                case DEBUG_LEVEL_ERROR:
+                    fprintf(stderr, "[%s] ", "ERRO");
+                    break;
+            }
         }
 
         va_list arglist;

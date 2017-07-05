@@ -16,7 +16,7 @@
 
 void menu_DesenharImagens(int highlightIndex)
 {
-    write_log(DEBUG_LEVEL_INFO, "Iniciando a função DesenharImagens.\n");
+    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função DesenharImagens.");
 
     int currentX = (MENU_WIDTH - 710) / 2, currentY = 225, increment = 70;
 
@@ -57,12 +57,12 @@ void menu_DesenharImagens(int highlightIndex)
         currentY += increment;
     }
 
-    write_log(DEBUG_LEVEL_INFO, "Deixando a função DesenharImagens.\n");
+    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função DesenharImagens.");
 }
 
 void ExibirJanelaMenu()
 {
-    write_log(DEBUG_LEVEL_INFO, "Iniciando a função ExibirJanelaMenu.\n");
+    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função ExibirJanelaMenu.");
 
     ALLEGRO_DISPLAY *main_display = NULL;
     ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -177,7 +177,7 @@ void ExibirJanelaMenu()
                         int x, y;
                         al_get_window_position(main_display, &x, &y);
 
-                        ExibirJanelaJogo(x + 50, y + 50, GAME_MODE_NORMAL, 1, 15, 20);
+                        ExibirJanelaJogo(x + 50, y + 50, GAME_MODE_NORMAL, 1, 15, 35);
 
                         al_set_target_backbuffer(main_display); 
 
@@ -203,5 +203,5 @@ void ExibirJanelaMenu()
 
     al_destroy_display(main_display);
 
-    write_log(DEBUG_LEVEL_INFO, "Deixando a função ExibirJanelaMenu.\n");
+    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função ExibirJanelaMenu.");
 }

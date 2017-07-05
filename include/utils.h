@@ -5,6 +5,8 @@ char *strjoin(const char *str1, const char *str2);
 
 char *convert_int(int i);
 
-void write_log(int debug_level, const char *str, ...);
+double distance_between_points(double x1, double y1, double x2, double y2);
+
+void write_log(int debug_level, bool print_prefix, const char *str, ...);
 
 #endif // __UTILS_H_
