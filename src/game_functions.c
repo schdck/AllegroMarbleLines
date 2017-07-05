@@ -205,9 +205,7 @@ void CarregarLevel(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **m
             position = 0;
         }
     }
-
-    fprintf(stderr, "Chega aqui?");
-
+    
     fclose(level_info);
 
     write_log(DEBUG_LEVEL_ALL, true, "Deixando a função CarregarLevel.");
@@ -267,7 +265,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
             projectiles_at_track[i][j].cord.x = -1;
             projectiles_at_track[i][j].cord.y = -1;
 
-            //fprintf(stderr, "Corrdenadas do ponto %d da trilha %d: %.2f, %.2f\n", j, i, projectiles_at_track[i][j].cord.x, projectiles_at_track[i][j].cord.y);
+            write_log(DEBUG_LEVEL_ALL, true, "Inicializado ponto %d da trilha %d para as coordenadas: %.2f, %.2f", j, i, projectiles_at_track[i][j].cord.x, projectiles_at_track[i][j].cord.y);
         }
     }
 
@@ -347,16 +345,68 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                 PLAYER_SCORE -= 7;
                 ball_on_way = false;
             }
-            else if(0) // XXX detectar colisão
-            {
-
-            }
             else
             {
-                on_way_projectile.cord.x += speedX;
-                on_way_projectile.cord.y += speedY;
+                bool colision_detected = false;
 
-                al_draw_filled_circle(on_way_projectile.cord.x, on_way_projectile.cord.y, GAME_PROJECTILE_RADIUS, on_way_projectile.color);
+                int colision_track = -1, colision_index = -1;
+
+                for(int i = 0; i < map_info->map_length; i++)
+                {
+                    for(int j = 0; j < map_info->tracks[j].track_length; j++)
+                    {
+                        for(int k = 0; k < created_projectiles[j]; k++)
+                        {
+                            POINT p = projectiles_at_track[j][k].cord;
+
+                            if(distance_between_points(on_way_projectile.cord.x, on_way_projectile.cord.y, p.x, p.y) < GAME_NEXT_PROJECTILE_RADIUS * 2)
+                            {
+                                colision_detected = true;
+                                colision_track = j;
+                                colision_index = k;
+                            }
+                        }
+                    }
+                }
+
+                /*if(colision_detected)
+                {
+                    ball_on_way = false;
+
+                    PROJECTILE *last_projectile = &projectiles_at_track[colision_track][created_projectiles[colision_track] - 1];
+                    
+                    POINT start_point = last_projectile->cord;
+                    POINT current_point = last_projectile->cord;
+                    double distance;
+
+                    do
+                    {
+                        *last_projectile->position++;
+
+                        map_info->tracks[colision_track].path[last_projectile->position]
+
+                        current_point.x = map_info->tracks[colision_track].path[last_projectile->position].x;
+                        current_point.y = map_info->tracks[colision_track].path[last_projectile->position].y;
+                        
+                    }
+                    while(distance_between_points(start_point.x, start_point.y, current_point.x, current_point.y) < GAME_PROJECTILE_RADIUS * 2 && created_projectiles[i] < projectiles_per_track[i])
+
+                    for(int i = created_projectiles[colision_track]; i > colision_index; i--)
+                    {
+                        projectiles_at_track[colision_track][i] = projectiles_at_track[colision_track][i - 1];
+                    }
+
+                    projectiles_at_track[colision_track][colision_index] = ball
+                }
+                else
+                {
+                    */
+                    on_way_projectile.cord.x += speedX;
+                    on_way_projectile.cord.y += speedY;
+
+                    al_draw_filled_circle(on_way_projectile.cord.x, on_way_projectile.cord.y, GAME_PROJECTILE_RADIUS, on_way_projectile.color);
+                //}
+                
             }
         }
 
