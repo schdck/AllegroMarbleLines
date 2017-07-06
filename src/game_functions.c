@@ -397,6 +397,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                 // Procurar bolas iguais
             }
 
+            // Corrigir distâncias
             for(int i = 0; i < map_info->map_length; i++)
             {
                 int acumulador = ball_at_track[i][0].position;
