@@ -16,6 +16,11 @@ bool DisplayYesNoConfirmation(ALLEGRO_DISPLAY *display, const char *title, const
     return al_show_native_message_box(display, title, subtitle, message, NULL, ALLEGRO_MESSAGEBOX_YES_NO) == 1;
 }
 
+bool colors_match(ALLEGRO_COLOR c1, ALLEGRO_COLOR c2)
+{
+    return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b;
+}
+
 int InicializarAllegro()
 {
     int returnCode = 1;
