@@ -1,0 +1,22 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "0.1.0",
+    "command": "g++",
+    "isShellCommand": true,
+    "args": ["src/allegro_utils.c", 
+             "src/game_functions.c",
+             "src/main.c",
+             "src/menu_functions.c",
+             "src/utils.c", 
+             "-o app", 
+             "-I/usr/include/allegro5", 
+             "-L/usr/lib", 
+             "-lallegro", 
+             "-lallegro_image", 
+             "-lallegro_dialog", 
+             "-lallegro_font", 
+             "-lallegro_ttf", 
+             "-lallegro_primitives"],
+    "showOutput": "always"
+}

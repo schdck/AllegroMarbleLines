@@ -29,5 +29,4 @@
 
 #define     CURRENT_DEBUG_LEVEL         DEBUG_LEVEL_INFO
 
-
 #endif // __CONSTANTS_H_

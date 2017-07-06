@@ -7,7 +7,11 @@ struct POINT {
 };
 
 struct PROJECTILE {
+    ALLEGRO_COLOR color;
     POINT cord;
+};
+
+struct BALL {
     ALLEGRO_COLOR color;
     int position;
 };
