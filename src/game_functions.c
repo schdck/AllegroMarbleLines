@@ -25,12 +25,31 @@ struct ALLEGRO_COLOR GenerateRandomColor()
     const int AMOUNT_OF_COLORS = 3;
 
     ALLEGRO_COLOR colors[AMOUNT_OF_COLORS] = {
-        al_map_rgb(255, 0, 0),
-        al_map_rgb(0, 255, 0),
-        al_map_rgb(0, 0, 255)
+        al_map_rgba(255, 0, 0, 20),
+        al_map_rgba(0, 255, 0, 20),
+        al_map_rgba(0, 0, 255, 20)
     };
 
     return colors[rand() % AMOUNT_OF_COLORS];
+}
+
+struct BALL generate_ball()
+{
+    BALL b;
+
+    b.position = 0;
+    b.color = GenerateRandomColor();
+
+    return b;
+}
+
+void shift_array(BALL *a, int n, int d) 
+{
+   for (int i = n; i >= 0 + d; i--)
+   {
+       *(a + i) = *(a + i - d);
+       *(a + i) = *(a + i - d);
+   }
 }
 
 void ExibirJanelaJogo(int X, int Y, ushort game_mode, ushort level, ushort projectile_speed, ushort balls_speed)
@@ -166,9 +185,7 @@ void CarregarLevel(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **m
     (*map_info) = (MAP_INFO *) malloc(sizeof(MAP_INFO));
     (*map_info)->map_length = amount_of_tracks;
     
-    (*map_info)->tracks = (TRACK *) malloc(amount_of_tracks * sizeof(TRACK));
-
-    
+    (*map_info)->tracks = (TRACK *) malloc(amount_of_tracks * sizeof(TRACK));    
 
     write_log(DEBUG_LEVEL_INFO, false, "***** LEVEL [INFO] *****\nFile name: %s\nAmount of tracks: %d\n", file_name, amount_of_tracks);
 
@@ -188,8 +205,6 @@ void CarregarLevel(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **m
 
     while(fscanf(level_info, "%d,%d", &point_x, &point_y) == 2)
     {
-        fprintf(stderr, "%d, %d\n", point_x, point_y);
-
         if(point_x >= 0 && point_y >= 0)
         {
             p = &(*map_info)->tracks[track].path[position++];
@@ -215,9 +230,9 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 {
     write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função Jogar.");
 
-    bool fired_ball = false, ball_on_way = false, hold = false;
+    bool fired_projectile = false, projectile_on_way = false, hold_positions = false, hold_creation = false, fix_differences = false;
 
-    int mouseX = 0, mouseY = 0, game_return_code = -1, ultima_atualizacao_posicao = 0;
+    int mouseX = 0, mouseY = 0, game_return_code = -1, last_position_update = 0, last_colision_track = -1, last_colision_index = -1, point_acumulator = 10;
 
     double speedX, speedY;
 
@@ -245,27 +260,25 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
     PROJECTILE current_projectile,
                next_projectile,
-               on_way_projectile,
-               *projectiles_at_track[map_info->map_length];
+               on_way_projectile;
 
     current_projectile.color = GenerateRandomColor();
     next_projectile.color = GenerateRandomColor();
 
-    int projectiles_per_track[map_info->map_length];
-    int created_projectiles[map_info->map_length];
+    BALL *ball_at_track[map_info->map_length];
+
+    int max_balls_per_track[map_info->map_length];
+    int created_balls_at_track[map_info->map_length];
 
     for(int i = 0; i < map_info->map_length; i++)
     {
-        projectiles_per_track[i] = (map_info->tracks[i].track_length / (GAME_PROJECTILE_RADIUS * 2));
-        projectiles_at_track[i] = (PROJECTILE *) malloc(projectiles_per_track[i] * sizeof(PROJECTILE));
-        created_projectiles[i] = 0;
+        max_balls_per_track[i] = (map_info->tracks[i].track_length / (GAME_PROJECTILE_RADIUS * 2));
+        ball_at_track[i] = (BALL *) malloc(max_balls_per_track[i] * sizeof(BALL));
+        created_balls_at_track[i] = 0;
 
-        for(int j = 0; j < projectiles_per_track[i]; j++)
+        for(int j = 0; j < max_balls_per_track[i]; j++)
         {
-            projectiles_at_track[i][j].cord.x = -1;
-            projectiles_at_track[i][j].cord.y = -1;
-
-            write_log(DEBUG_LEVEL_ALL, true, "Inicializado ponto %d da trilha %d para as coordenadas: %.2f, %.2f", j, i, projectiles_at_track[i][j].cord.x, projectiles_at_track[i][j].cord.y);
+            ball_at_track[i][j].position = -1;
         }
     }
 
@@ -294,9 +307,9 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                 mouseX = event.mouse.x;
                 mouseY = event.mouse.y;
             }
-            else if(event.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP && !fired_ball && !ball_on_way)
+            else if(event.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP && !fired_projectile && !projectile_on_way)
             {
-                fired_ball = true;
+                fired_projectile = true;
 
                 double deltaX = mouseX - (GAME_WIDTH / 2);
                 double deltaY = mouseY - (GAME_HEIGHT / 2);
@@ -320,13 +333,13 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
         al_draw_multiline_textf(font, al_map_rgb(0, 0, 0), mouseX + 15, mouseY + 15, 300.0, 12.0, ALLEGRO_ALIGN_LEFT, "angle %.2frad (%.2fdeg)\nsin %.2f\ncos %.2f", rotation_angle, rotation_angle * 57.2958, sin(rotation_angle), cos(rotation_angle));
         al_draw_multiline_textf(font, al_map_rgb(0, 0, 0), 5, 5, 300.0, 12.0, ALLEGRO_ALIGN_LEFT, "NÍVEL: %d\nPONTOS: %d", LEVEL, PLAYER_SCORE);
 
-        if(fired_ball)
+        if(fired_projectile)
         {
             on_way_projectile = current_projectile;
             current_projectile = next_projectile;
             next_projectile.color = GenerateRandomColor();
-            ball_on_way = true;
-            fired_ball = false;
+            projectile_on_way = true;
+            fired_projectile = false;
         }
 
         current_projectile.cord.x = (GAME_WIDTH / 2) + (sin(rotation_angle) * 55);
@@ -338,158 +351,258 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
         al_draw_filled_circle(current_projectile.cord.x, current_projectile.cord.y, GAME_PROJECTILE_RADIUS, current_projectile.color);
         al_draw_filled_circle(next_projectile.cord.x, next_projectile.cord.y, GAME_NEXT_PROJECTILE_RADIUS, next_projectile.color);
 
-        if(ball_on_way)
+        if(!hold_positions)
+        {
+            if(last_position_update <= 0)
+            {
+                last_position_update = GAME_FPS / BALLS_SPEED;
+
+                for(int i = 0; i < map_info->map_length; i++)
+                {
+                    for(int j = 0; j < created_balls_at_track[i]; j++)
+                    {
+                        BALL *b = &ball_at_track[i][j];
+
+                        b->position++;
+
+                        if(b->position == map_info->tracks[i].track_length)
+                        {
+                            fprintf(stderr, "GAME OVER!\n");
+                        }
+                    }
+
+                    bool create_new_ball = created_balls_at_track[i] == 0 ||
+                                           (created_balls_at_track[i] < max_balls_per_track[i] && ball_at_track[i][0].position > (GAME_PROJECTILE_RADIUS * 2));
+                    
+                    if(!hold_creation && create_new_ball)
+                    {
+                        if(created_balls_at_track[i] > 0)
+                        {
+                            shift_array(ball_at_track[i], created_balls_at_track[i], 1);
+                        }
+
+                        ball_at_track[i][0] = generate_ball();
+
+                        created_balls_at_track[i]++;
+                    }
+                }
+            }
+
+            last_position_update--;
+        }
+        else
+        {
+            if(last_colision_track >= 0 && last_colision_index >= 0)
+            {
+                if(fix_differences)
+                {
+                    fix_differences = false;
+
+                    for(int i = last_colision_index; i < created_balls_at_track[last_colision_track]; i++)
+                    {
+                        if(i < 1)
+                        {
+                            i++;
+                        }
+
+                        BALL *current = &ball_at_track[last_colision_track][i];
+                        BALL *previous = &ball_at_track[last_colision_track][i - 1];
+
+                        int distance = current->position - previous->position, deslocamento = 3;
+
+                        if(distance < GAME_PROJECTILE_RADIUS * 2 && distance < -deslocamento)
+                        {
+                            current->position += deslocamento;
+                            fix_differences = true;
+                        }
+                        else if(distance > GAME_PROJECTILE_RADIUS * 2 && distance > deslocamento)
+                        {
+                            current->position -= deslocamento;
+                            fix_differences = true;
+                        }
+                        else
+                        {
+                            current->position = previous->position + (GAME_PROJECTILE_RADIUS * 2);
+                        }
+                    }
+                }
+                else
+                {
+                    hold_positions = false;
+
+                    if(created_balls_at_track[last_colision_track] > 0)
+                    {
+                        bool destroyed_any;
+
+                        int equal_balls_left = 0,
+                            equal_balls_right = 0;
+
+                        int i;
+
+                        i = last_colision_index - 1;
+
+                        while(i > 0 && colors_match(ball_at_track[last_colision_track][i--].color, ball_at_track[last_colision_track][last_colision_index].color))
+                        {
+                            equal_balls_left++;
+                        }
+
+                        i = last_colision_index + 1;
+                        while(i < created_balls_at_track[last_colision_track] && colors_match(ball_at_track[last_colision_track][i++].color, ball_at_track[last_colision_track][last_colision_index].color))
+                        {
+                            equal_balls_right++;
+                        }
+
+                        destroyed_any = equal_balls_left + equal_balls_right >= 2;
+
+                        if(destroyed_any)
+                        {
+                            int total = equal_balls_left + equal_balls_right, removidas;
+
+                            PLAYER_SCORE += total * point_acumulator;
+
+                            total++;
+
+                            last_colision_index = last_colision_index - equal_balls_left;
+
+                            for(i = last_colision_index; i < created_balls_at_track[last_colision_track]; i++)
+                            {
+                                if(i + total < created_balls_at_track[last_colision_track])
+                                {
+                                    ball_at_track[last_colision_track][i] = ball_at_track[last_colision_track][i + total];
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                            
+                            created_balls_at_track[last_colision_track] -= total;
+
+                            if(created_balls_at_track[last_colision_track] < 0)
+                            {
+                                created_balls_at_track[last_colision_track] = 0;
+                                hold_positions = false;
+                                fix_differences = false;
+                            }
+                            else
+                            {
+                                fix_differences = true;
+                                hold_positions = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if(!hold_positions)
+            {
+                point_acumulator = 10;
+                last_colision_track = -1;
+                last_colision_index = -1;
+            }
+        }
+            
+        for(int i = 0; i < map_info->map_length; i++)
+        {
+            for(int j = 0; j < created_balls_at_track[i]; j++)
+            {
+                BALL b = ball_at_track[i][j];
+
+                POINT p = map_info->tracks[i].path[b.position];
+                
+                al_draw_filled_circle(p.x, p.y, GAME_PROJECTILE_RADIUS, b.color);
+                al_draw_text(font, al_map_rgb(0, 0, 0), p.x, p.y, 0, convert_int(j));
+            }
+        }
+
+        if(projectile_on_way)
         {
             if(on_way_projectile.cord.x > GAME_WIDTH || on_way_projectile.cord.y > GAME_HEIGHT || on_way_projectile.cord.x < 0 || on_way_projectile.cord.y < 0)
             {
                 PLAYER_SCORE -= 7;
-                ball_on_way = false;
+                projectile_on_way = false;
             }
             else
             {
-                bool colision_detected = false;
+                double distance, best_distance = GAME_NEXT_PROJECTILE_RADIUS * 2 + 1;
 
-                int colision_track = -1, colision_index = -1;
+                int colision_track = -1;
+                int colision_index = -1;
+                bool hit_at_left;
+
+                BALL *colision_ball = NULL;
 
                 for(int i = 0; i < map_info->map_length; i++)
                 {
-                    for(int j = 0; j < map_info->tracks[j].track_length; j++)
+                    for(int j = 0; j < created_balls_at_track[i]; j++)
                     {
-                        for(int k = 0; k < created_projectiles[j]; k++)
-                        {
-                            POINT p = projectiles_at_track[j][k].cord;
+                        colision_ball = &ball_at_track[i][j];
 
-                            if(distance_between_points(on_way_projectile.cord.x, on_way_projectile.cord.y, p.x, p.y) < GAME_NEXT_PROJECTILE_RADIUS * 2)
-                            {
-                                colision_detected = true;
-                                colision_track = j;
-                                colision_index = k;
-                            }
+                        POINT p = map_info->tracks[i].path[colision_ball->position];
+
+                        if((distance = distance_between_points(on_way_projectile.cord.x, on_way_projectile.cord.y, p.x, p.y)) <= GAME_NEXT_PROJECTILE_RADIUS * 2 && distance < best_distance)
+                        {
+                            best_distance = distance;
+
+                            hit_at_left = on_way_projectile.cord.x - p.x < 0;
+
+                            colision_track = i;
+                            colision_index = j;
                         }
                     }
                 }
 
-                /*if(colision_detected)
-                {
-                    ball_on_way = false;
+                if(colision_track >= 0)
+                {  
+                    projectile_on_way = false;
+                    hold_positions = true;
 
-                    PROJECTILE *last_projectile = &projectiles_at_track[colision_track][created_projectiles[colision_track] - 1];
+                    BALL new_ball;
+
+                    new_ball.position = colision_ball->position;
+                    new_ball.color = on_way_projectile.color;
+
+                    for(int i = created_balls_at_track[colision_track]; i > colision_index + 1 && i > 0; i--)
+                    {
+                        ball_at_track[colision_track][i] = ball_at_track[colision_track][i - 1];
+                    }
+
+                    if(hit_at_left)
+                    {
+                        ball_at_track[colision_track][colision_index + 1] = ball_at_track[colision_track][colision_index];
+                        ball_at_track[colision_track][colision_index] = new_ball;
+                    }
+                    else
+                    {
+                        ball_at_track[colision_track][colision_index + 1] = new_ball;
+                        colision_index++;
+                    }
+
+                    last_colision_track = colision_track;
+                    last_colision_index = colision_index;
                     
-                    POINT start_point = last_projectile->cord;
-                    POINT current_point = last_projectile->cord;
-                    double distance;
+                    created_balls_at_track[colision_track]++;
 
-                    do
+                    for(int i = 0; i < map_info->map_length; i++)
                     {
-                        *last_projectile->position++;
+                        int acumulador = ball_at_track[i][0].position;
 
-                        map_info->tracks[colision_track].path[last_projectile->position]
+                        for(int j = 1; j < created_balls_at_track[i]; j++)
+                        {
+                            acumulador += (GAME_PROJECTILE_RADIUS * 2);
 
-                        current_point.x = map_info->tracks[colision_track].path[last_projectile->position].x;
-                        current_point.y = map_info->tracks[colision_track].path[last_projectile->position].y;
-                        
+                            ball_at_track[i][j].position = acumulador;
+                        }
                     }
-                    while(distance_between_points(start_point.x, start_point.y, current_point.x, current_point.y) < GAME_PROJECTILE_RADIUS * 2 && created_projectiles[i] < projectiles_per_track[i])
-
-                    for(int i = created_projectiles[colision_track]; i > colision_index; i--)
-                    {
-                        projectiles_at_track[colision_track][i] = projectiles_at_track[colision_track][i - 1];
-                    }
-
-                    projectiles_at_track[colision_track][colision_index] = ball
                 }
                 else
                 {
-                    */
                     on_way_projectile.cord.x += speedX;
                     on_way_projectile.cord.y += speedY;
 
                     al_draw_filled_circle(on_way_projectile.cord.x, on_way_projectile.cord.y, GAME_PROJECTILE_RADIUS, on_way_projectile.color);
-                //}
-                
-            }
-        }
-
-        if(!hold)
-        {
-            if(ultima_atualizacao_posicao <= 0)
-            {
-                ultima_atualizacao_posicao = GAME_FPS / BALLS_SPEED;
-
-                for(int i = 0; i < map_info->map_length; i++)
-                {
-                    PROJECTILE *p;
-
-                    for(int j = 0; j < created_projectiles[i]; j++)
-                    {
-                        p = &projectiles_at_track[i][j];
-
-                        p->position++;
-
-                        if(p->position == map_info->tracks[i].track_length)
-                        {
-                            fprintf(stderr, "GAME OVER!\n");
-                        }
-                        else
-                        {
-                            p->cord = map_info->tracks[i].path[p->position];
-                        }
-                    }
-
-                    bool create_new_projectile = false;
-
-                    if(created_projectiles[i] > 0)
-                    {
-                        POINT n = projectiles_at_track[i][0].cord,
-                              s = map_info->tracks[i].path[0];
-
-                        double distance = distance_between_points(s.x, s.y, n.x, n.y);
-
-                        //fprintf(stderr, "d((%.2f, %.2f), (%.2f, %.2f)) = %.2f\n", s.x, s.y, n.x, n.y, distance_between_points(s.x, s.y, n.x, n.y));
-
-                        if(distance > GAME_PROJECTILE_RADIUS * 2 && created_projectiles[i] < projectiles_per_track[i])
-                        {
-                            for(int j = created_projectiles[i]; j > 0; j--)
-                            {
-                                write_log(DEBUG_LEVEL_ALL, true, "Deslocando projétil da trilha %d da posição %d para a posição %d", i, j, j - 1);
-
-                                projectiles_at_track[i][j] = projectiles_at_track[i][j - 1];
-                            }
-
-                            create_new_projectile = true;
-                        }                   
-                    }
-                    
-                    if(created_projectiles[i] == 0 || create_new_projectile)
-                    {
-                        p = &projectiles_at_track[i][0];
-                        p->position = 0;
-                        p->color = GenerateRandomColor();
-                        p->cord.x = map_info->tracks[i].path[0].x;
-                        p->cord.y = map_info->tracks[i].path[0].y;
-                        created_projectiles[i]++;
-
-                        write_log(DEBUG_LEVEL_ALL, true, "Novo projétil da track %d carregado para %.2f, %.2f", i, p->cord.x, p->cord.y);
-                    }
                 }
-            }
-
-            ultima_atualizacao_posicao--;
-        }
-            
-
-        for(int i = 0; i < map_info->map_length; i++)
-        {
-            for(int j = 0; j < projectiles_per_track[i]; j++)
-            {
-                PROJECTILE *p = &projectiles_at_track[i][j];
                 
-                if(p->cord.x < 0 && p->cord.y < 0)
-                {
-                    break;
-                }
-
-                al_draw_filled_circle(p->cord.x, p->cord.y, GAME_PROJECTILE_RADIUS, p->color);
             }
         }
 
@@ -510,7 +623,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
     for(int i = 0; i < map_info->map_length; i++)
     {
-        free(projectiles_at_track[i]);
+        free(ball_at_track[i]);
         free(map_info->tracks[i].path);
     }
 
