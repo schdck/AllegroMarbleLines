@@ -20,7 +20,7 @@
 struct POINT {
     int x;
     int y;
-    bool vulnerable;
+    int vulnerable;
 
     POINT *next;
     POINT *prev;
@@ -133,7 +133,7 @@ void map_image(int startX, int startY, int direcao)
 
     ALLEGRO_COLOR c = al_get_pixel(IMAGE, startX, startY);
 
-	if(startX < 0 || startX >= IMAGE_WIDTH || startY < 0 || startY >= IMAGE_HEIGHT || (c.r < 0.5 && c.b < 0.5) || PASSED[startX][startY])
+	if(startX < 0 || startX >= IMAGE_WIDTH || startY < 0 || startY >= IMAGE_HEIGHT || (c.r < 0.5 && c.g < 0.5 && c.b < 0.5) || PASSED[startX][startY])
 	{
 		return;
 	}
@@ -141,9 +141,11 @@ void map_image(int startX, int startY, int direcao)
     PIXELS_FOUND++;
     PASSED[startX][startY] = true;
 
-    inserir_no_fim(criar_ponto(startX, startY, c.r > 0));
+    int vulnerable = (c.r > 0.5 ? 1 : (c.g > 0.5 ? 0 : 2));
 
-    al_draw_pixel(startX, startY, al_map_rgb(255,0,0));
+    inserir_no_fim(criar_ponto(startX, startY, vulnerable));
+
+    al_draw_pixel(startX, startY, c);
     
     if(PLOT_POINTS)
     {
@@ -161,9 +163,10 @@ void map_image(int startX, int startY, int direcao)
 
 void map_image(int startX, int startY)
 {
-    map_image(startX, startY, RIGHT);
-    map_image(startX, startY, NORDESTE);
-    map_image(startX, startY, SUDESTE);
+    for(int i = FRONT; i < SUDOESTE; i++)
+    {
+        map_image(startX, startY, i);
+    }
 }
 
 
@@ -182,7 +185,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    IMAGE = al_load_bitmap("/home/mvschmaedeck/Documents/AllegroMarbleLines/design/heatmaps/level_1_c.png");
+    IMAGE = al_load_bitmap("/home/mvschmaedeck/Documents/AllegroMarbleLines/design/heatmaps/level_2_2.png");
 
     if(IMAGE == NULL)
     {
@@ -196,19 +199,32 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    int x = 0, y;
+    ALLEGRO_DISPLAY *display = al_create_display(IMAGE_WIDTH, IMAGE_HEIGHT);    
 
-    for(y = 0; y < IMAGE_HEIGHT; y++)
+    bool found_start;
+
+    int x, y;
+
+    al_draw_bitmap(IMAGE, 0, 0, 0);
+
+    for(y = IMAGE_HEIGHT - 1; y >= 0 && !found_start; y--)
     {
-        PASSED[x][y] = true;
-
-        if(al_get_pixel(IMAGE, x, y).r > 0)
+        for(x = IMAGE_WIDTH - 1; x >= 0 && !found_start; x--)
         {
-            break;
+            PASSED[x][y] = true;
+
+            al_draw_pixel(x, y, al_map_rgb(255,255,255));
+
+            if(al_get_pixel(IMAGE, x, y).r > 0.5 || al_get_pixel(IMAGE, x, y).b > 0.5)
+            {
+                found_start = true;
+            }
         }
+
+        al_flip_display();
     }
 
-    ALLEGRO_DISPLAY *display = al_create_display(IMAGE_WIDTH, IMAGE_HEIGHT);    
+    al_rest(3);
 
     al_clear_to_color(al_map_rgb(0,0,0));
 
@@ -233,7 +249,7 @@ int main()
 	while(current != NULL)
     {
 		//fprintf(stderr, "Escrevendo ponto %d %d (vulnerable: %s) para o arquivo.\n", current->x, current->y, current->vulnerable ? "true" : "false");
-        fprintf(file, "%d,%d,%d\n",current->x, current->y, current->vulnerable ? 1 : 0);
+        fprintf(file, "%d,%d,%d\n",current->x, current->y, current->vulnerable);
 		current = current->next;
 	}
     fprintf(file, "-1,-1,-1");

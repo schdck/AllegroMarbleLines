@@ -28,6 +28,7 @@
         "haptic.h": "c",
         "utf8.h": "c",
         "heat_map_bitmap.c": "cpp",
-        "recorde_functions.c": "cpp"
+        "recorde_functions.c": "cpp",
+        "cstdlib": "cpp"
     }
 }
