@@ -20,11 +20,15 @@ void menu_DesenharImagens(int highlightIndex)
 
     int currentX = (MENU_WIDTH - 710) / 2, currentY = 225, increment = 70;
 
+    //Desenhar fundo
+    ALLEGRO_BITMAP *image = load_image(FUNDO_PATH); 
+    al_draw_bitmap(image, currentX, 0, 0);
+    al_destroy_bitmap(image);
     // Desenhar o logo
-    ALLEGRO_BITMAP *image = load_image(LOGO_PATH);
+    image = load_image(LOGO_PATH);
     al_draw_bitmap(image, currentX, 45, 0);
     al_destroy_bitmap(image);
-
+    
     // Até 10 imagens, caso contrário será necessário adaptar a forma em que elas são carregadas
     const int quantidadeDeImagens = 6;
     const char *imgsPath = "../img/menu/";
