@@ -10,6 +10,7 @@
 #include "../include/constants.h"
 #include "../include/utils.h"
 #include "../include/allegro_utils.h"
+#include "../include/recorde_functions.h"
 #include "../include/game_functions.h"
 
 static ushort PROJECTILE_SPEED;
@@ -20,14 +21,14 @@ static int PLAYER_SCORE;
 
 int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font);
 
-struct ALLEGRO_COLOR GenerateRandomColor()
+struct ALLEGRO_COLOR generate_random_color()
 {
     const int AMOUNT_OF_COLORS = 3;
 
     ALLEGRO_COLOR colors[AMOUNT_OF_COLORS] = {
-        al_map_rgba(255, 0, 0, 20),
-        al_map_rgba(0, 255, 0, 20),
-        al_map_rgba(0, 0, 255, 20)
+        al_map_rgb(255, 143, 143),
+        al_map_rgb(143, 255, 143),
+        al_map_rgb(143, 143, 255)
     };
 
     return colors[rand() % AMOUNT_OF_COLORS];
@@ -38,7 +39,7 @@ struct BALL generate_ball()
     BALL b;
 
     b.position = 0;
-    b.color = GenerateRandomColor();
+    b.color = generate_random_color();
 
     return b;
 }
@@ -52,9 +53,9 @@ void shift_array(BALL *a, int n, int d)
    }
 }
 
-void ExibirJanelaJogo(int X, int Y, ushort game_mode, ushort level, ushort projectile_speed, ushort balls_speed)
+void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort projectile_speed, ushort balls_speed)
 {
-    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função ExibirJanelaJogo.");
+    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função exibir_janela_jogo.");
 
     ALLEGRO_DISPLAY *game_display;
     ALLEGRO_EVENT_QUEUE *game_event_queue;
@@ -66,40 +67,40 @@ void ExibirJanelaJogo(int X, int Y, ushort game_mode, ushort level, ushort proje
 
     if(!game_display) 
     {
-        DisplayError(NULL, "Erro fatal", "Erro ao criar o display principal do jogo", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
-        exit(-1);
+        display_error(NULL, "Erro fatal", "Erro ao criar o display principal do jogo", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        exit(EXIT_FAILURE);
     }
 
     if(!al_set_system_mouse_cursor(game_display, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT))
     {
-        DisplayError(NULL, "Erro fatal", "Erro ao inicializar ponteiro do mouse", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        display_error(NULL, "Erro fatal", "Erro ao inicializar ponteiro do mouse", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(game_display);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     game_event_queue = al_create_event_queue();
 
     if(!game_event_queue) 
     {
-        DisplayError(NULL, "Erro fatal", "Erro ao inicializar fila de eventos", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        display_error(NULL, "Erro fatal", "Erro ao inicializar fila de eventos", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(game_display);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     if(!al_init_primitives_addon())
     {
-        DisplayError(NULL, "Erro fatal", "Erro ao inicializar extensão de primitivas gráficas", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        display_error(NULL, "Erro fatal", "Erro ao inicializar extensão de primitivas gráficas", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(game_display);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     game_font = al_load_font("../font/default_font.ttf", 12, 0);
 
     if (!game_font)
     {
-        DisplayError(NULL, "Erro fatal", "Erro ao carregar fonte padrão do jogo", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        display_error(NULL, "Erro fatal", "Erro ao carregar fonte padrão do jogo", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(game_display);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     al_set_window_title(game_display, "Jogo - AllegroMarbleLines");
@@ -124,13 +125,15 @@ void ExibirJanelaJogo(int X, int Y, ushort game_mode, ushort level, ushort proje
     if(game_return_code == GAME_RETURN_CODE_LOST)
     {
         // XXX Oferecer opção líderes
+
+        exibir_tela_pos_jogo(PLAYER_SCORE);
     }
 
     al_destroy_font(game_font);
     al_destroy_event_queue(game_event_queue);
     al_destroy_display(game_display);
 
-    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função ExibirJanelaJogo.");
+    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função exibir_janela_jogo.");
 }
 
 void CarregarLevel(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **map_info)
@@ -203,8 +206,12 @@ void CarregarLevel(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **m
 
     POINT *p = &(*map_info)->tracks[0].path[0];
 
-    while(fscanf(level_info, "%d,%d", &point_x, &point_y) == 2)
+    int temp;
+
+    while(fscanf(level_info, "%d,%d,%d", &point_x, &point_y, &temp) == 3)
     {
+        p->ball_vulnerable = (temp == 1);
+
         if(point_x >= 0 && point_y >= 0)
         {
             p = &(*map_info)->tracks[track].path[position++];
@@ -232,7 +239,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
     bool fired_projectile = false, projectile_on_way = false, hold_positions = false, hold_creation = false, fix_differences = false;
 
-    int mouseX = 0, mouseY = 0, game_return_code = -1, last_position_update = 0, last_colision_track = -1, last_colision_index = -1, point_acumulator = 10;
+    int mouseX = 0, mouseY = 0, game_return_code = -1, last_position_update = 0, last_colision_track = -1, last_colision_index = -1, point_acumulator = 10, losing_track = -1;;
 
     double speedX, speedY;
 
@@ -262,8 +269,8 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                next_projectile,
                on_way_projectile;
 
-    current_projectile.color = GenerateRandomColor();
-    next_projectile.color = GenerateRandomColor();
+    current_projectile.color = generate_random_color();
+    next_projectile.color = generate_random_color();
 
     BALL *ball_at_track[map_info->map_length];
 
@@ -295,7 +302,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
             if(event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
             {
-                bool answer = DisplayYesNoConfirmation(NULL, "Tem certeza?", "Você tem certeza que deseja sair?", "Todo o progresso será perdido");
+                bool answer = display_yes_no_confirmation(NULL, "Tem certeza?", "Você tem certeza que deseja sair?", "Todo o progresso será perdido");
 
                 if(answer)
                 {
@@ -307,7 +314,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                 mouseX = event.mouse.x;
                 mouseY = event.mouse.y;
             }
-            else if(event.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP && !fired_projectile && !projectile_on_way)
+            else if(event.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP && !fired_projectile && !projectile_on_way && !hold_positions)
             {
                 fired_projectile = true;
 
@@ -337,7 +344,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
         {
             on_way_projectile = current_projectile;
             current_projectile = next_projectile;
-            next_projectile.color = GenerateRandomColor();
+            next_projectile.color = generate_random_color();
             projectile_on_way = true;
             fired_projectile = false;
         }
@@ -355,6 +362,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
         {
             if(last_position_update <= 0)
             {
+                last_position_update = 0;
                 last_position_update = GAME_FPS / BALLS_SPEED;
 
                 for(int i = 0; i < map_info->map_length; i++)
@@ -363,11 +371,15 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                     {
                         BALL *b = &ball_at_track[i][j];
 
-                        b->position++;
+                        b->position += BALLS_SPEED / 50;
 
-                        if(b->position == map_info->tracks[i].track_length)
+                        if(b->position >= map_info->tracks[i].track_length)
                         {
-                            fprintf(stderr, "GAME OVER!\n");
+                            b->position = map_info->tracks[i].track_length - 1;
+
+                            losing_track = i;
+
+                            game_return_code = GAME_RETURN_CODE_LOST;
                         }
                     }
 
@@ -475,7 +487,6 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                                     break;
                                 }
                             }
-                            
                             created_balls_at_track[last_colision_track] -= total;
 
                             if(created_balls_at_track[last_colision_track] < 0)
@@ -540,7 +551,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
                         POINT p = map_info->tracks[i].path[colision_ball->position];
 
-                        if((distance = distance_between_points(on_way_projectile.cord.x, on_way_projectile.cord.y, p.x, p.y)) <= GAME_NEXT_PROJECTILE_RADIUS * 2 && distance < best_distance)
+                        if((distance = distance_between_points(on_way_projectile.cord.x, on_way_projectile.cord.y, p.x, p.y)) <= GAME_NEXT_PROJECTILE_RADIUS * 2 + 20 && distance < best_distance)
                         {
                             best_distance = distance;
 
@@ -606,7 +617,27 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
             }
         }
 
-        al_flip_display();
+        if(game_return_code == GAME_RETURN_CODE_LOST)
+        {
+            ALLEGRO_BITMAP *explosion = load_image("../img/game/explosion.png");
+
+            if(explosion != NULL)
+            {
+                POINT p = map_info->tracks[losing_track].path[map_info->tracks[losing_track].track_length - 1];
+
+                al_draw_bitmap(explosion, p.x - 150, p.y - 150, 0);
+
+                al_destroy_bitmap(explosion);
+            }
+
+            al_flip_display();
+
+            al_rest(2);
+        }
+        else
+        {
+            al_flip_display();
+        }
 
         // Final laço de atualização da tela
         fps_difference = al_get_time() - fps_start;

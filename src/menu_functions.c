@@ -60,9 +60,9 @@ void menu_DesenharImagens(int highlightIndex)
     write_log(DEBUG_LEVEL_ALL, true, "Deixando a função DesenharImagens.");
 }
 
-void ExibirJanelaMenu()
+void exibir_janela_menu()
 {
-    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função ExibirJanelaMenu.");
+    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função exibir_janela_menu.");
 
     ALLEGRO_DISPLAY *main_display = NULL;
     ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -72,13 +72,13 @@ void ExibirJanelaMenu()
 
     if(!main_display) 
     {
-        DisplayError(NULL, "Erro fatal", "Erro ao criar o display principal", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        display_error(NULL, "Erro fatal", "Erro ao criar o display principal", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         exit(EXIT_FAILURE);
     }
 
     if(!al_set_system_mouse_cursor(main_display, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT))
     {
-        DisplayError(NULL, "Erro fatal", "Erro ao inicializar ponteiro do mouse", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        display_error(NULL, "Erro fatal", "Erro ao inicializar ponteiro do mouse", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
         exit(EXIT_FAILURE);
     }
@@ -87,21 +87,21 @@ void ExibirJanelaMenu()
 
     if(!event_queue) 
     {
-        DisplayError(NULL, "Erro fatal", "Erro ao inicializar fila de eventos", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        display_error(NULL, "Erro fatal", "Erro ao inicializar fila de eventos", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
         exit(EXIT_FAILURE);
     }
 
     if (!al_init_font_addon())
     {
-        DisplayError(NULL, "Erro fatal", "Erro ao inicializar extensão de fontes", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        display_error(NULL, "Erro fatal", "Erro ao inicializar extensão de fontes", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
         exit(EXIT_FAILURE);
     }
  
     if (!al_init_ttf_addon())
     {
-        DisplayError(NULL, "Erro fatal", "Erro ao inicializar extensão de fontes TTF", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        display_error(NULL, "Erro fatal", "Erro ao inicializar extensão de fontes TTF", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
         exit(EXIT_FAILURE);
     }
@@ -110,7 +110,7 @@ void ExibirJanelaMenu()
 
     if (!default_font)
     {
-        DisplayError(NULL, "Erro fatal", "Erro ao carregar fonte padrão", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        display_error(NULL, "Erro fatal", "Erro ao carregar fonte padrão", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
         exit(EXIT_FAILURE);
     }
@@ -177,7 +177,7 @@ void ExibirJanelaMenu()
                         int x, y;
                         al_get_window_position(main_display, &x, &y);
 
-                        ExibirJanelaJogo(x + 50, y + 50, GAME_MODE_NORMAL, 1, 15, 35);
+                        exibir_janela_jogo(x + 50, y + 50, GAME_MODE_NORMAL, 1, 15, 200);
 
                         al_set_target_backbuffer(main_display); 
 
@@ -185,13 +185,13 @@ void ExibirJanelaMenu()
 
                         break;
                     case 2:
-                        DisplayError(NULL, "", "Recordes", "");
+                        display_error(NULL, "", "Recordes", "");
                         break;
                     case 3:
-                        DisplayError(NULL, "", "Ajustes", "");
+                        display_error(NULL, "", "Ajustes", "");
                         break;
                     case 4:
-                        DisplayError(NULL, "", "Créditos", "");
+                        display_error(NULL, "", "Créditos", "");
                         break;
                     case 5:
                         desejaSair = true;
@@ -203,5 +203,5 @@ void ExibirJanelaMenu()
 
     al_destroy_display(main_display);
 
-    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função ExibirJanelaMenu.");
+    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função exibir_janela_menu.");
 }

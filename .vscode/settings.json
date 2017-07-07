@@ -20,6 +20,14 @@
         "color.h": "c",
         "allegro_primitives.h": "c",
         "mouse.h": "c",
-        "touch_input.h": "c"
+        "touch_input.h": "c",
+        "alwatcom.h": "c",
+        "allegro_utils.h": "c",
+        "libio.h": "c",
+        "bitmap_lock.h": "c",
+        "haptic.h": "c",
+        "utf8.h": "c",
+        "heat_map_bitmap.c": "cpp",
+        "recorde_functions.c": "cpp"
     }
 }
