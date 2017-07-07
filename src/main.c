@@ -16,12 +16,12 @@ int main(int argc, char **argv)
 {  
     srand(time(NULL));
 
-    if(!InicializarAllegro())
+    if(!inicializar_allegro5())
     {
         exit(EXIT_FAILURE);
     }
 
-    ExibirJanelaMenu();
+    exibir_janela_menu();
 
     exit(EXIT_SUCCESS);
 }

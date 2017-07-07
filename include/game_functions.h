@@ -4,6 +4,8 @@
 struct POINT {
     double x;
     double y;
+
+    bool ball_vulnerable;
 };
 
 struct PROJECTILE {
@@ -26,6 +28,6 @@ struct MAP_INFO {
     int map_length;
 };
 
-void ExibirJanelaJogo(int X, int Y, ushort game_mode, ushort level, ushort projectile_speed, ushort balls_speed);
+void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort projectile_speed, ushort balls_speed);
 
 #endif // __GAME_FUNCTIONS_H_
