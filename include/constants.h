@@ -2,7 +2,7 @@
 #define __CONSTANTS_H_
 
 #define     LOGO_PATH                   "../img/logo.png"
-
+#define     FUNDO_PATH                  "../img/fundo.png"
 #define     MENU_WIDTH                  800
 #define     MENU_HEIGHT                 600
 
