@@ -9,6 +9,27 @@
 #include "../include/allegro_utils.h"
 #include "../include/recorde_functions.h"
 
+struct RECORDE {
+    char *player;
+    int pontos;
+    int level;
+
+    RECORDE *prev;
+    RECORDE *next;
+}
+
+struct DOUBLE_LINKED_LIST {
+    RECORDE *first;
+    RECORDE *last;
+
+    int length;
+}
+
+void read_list_from_file(char file_name[])
+{
+
+}
+
 void exibir_tela_pos_jogo(int player_score)
 {
     ALLEGRO_FONT *title_font;

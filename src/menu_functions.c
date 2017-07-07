@@ -24,6 +24,7 @@ void menu_DesenharImagens(int highlightIndex)
     ALLEGRO_BITMAP *image = load_image(FUNDO_PATH); 
     al_draw_bitmap(image, currentX, 0, 0);
     al_destroy_bitmap(image);
+
     // Desenhar o logo
     image = load_image(LOGO_PATH);
     al_draw_bitmap(image, currentX, 45, 0);
@@ -181,7 +182,7 @@ void exibir_janela_menu()
                         int x, y;
                         al_get_window_position(main_display, &x, &y);
 
-                        exibir_janela_jogo(x + 50, y + 50, GAME_MODE_NORMAL, 2, 15, 100);
+                        exibir_janela_jogo(x + 50, y + 50, GAME_MODE_NORMAL, 1, 20, 30);
 
                         al_set_target_backbuffer(main_display); 
 

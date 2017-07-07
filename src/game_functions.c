@@ -13,25 +13,36 @@
 #include "../include/recorde_functions.h"
 #include "../include/game_functions.h"
 
+#define AMOUNT_OF_COLORS    6
+
+ALLEGRO_COLOR COLORS[AMOUNT_OF_COLORS];
+
+int GENERATED_BALLS_OF_COLOR[AMOUNT_OF_COLORS];
+int BALLS_TO_COME;
+
 static ushort PROJECTILE_SPEED;
 static ushort BALLS_SPEED;
 static ushort GAME_MODE;
 static ushort LEVEL;
 static int PLAYER_SCORE;
 
-int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font);
+int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font);
 
-struct ALLEGRO_COLOR generate_random_color()
+struct ALLEGRO_COLOR generate_random_color(bool is_for_projectile)
 {
-    const int AMOUNT_OF_COLORS = 3;
+    int index;
 
-    ALLEGRO_COLOR colors[AMOUNT_OF_COLORS] = {
-        al_map_rgb(255, 143, 143),
-        al_map_rgb(143, 255, 143),
-        al_map_rgb(143, 143, 255)
-    };
+    do
+    {
+        index = rand() % (4 + ((LEVEL - 1) / 3));
+    } while(GENERATED_BALLS_OF_COLOR[index] == 0 && is_for_projectile);
 
-    return colors[rand() % AMOUNT_OF_COLORS];
+    if(!is_for_projectile)
+    {
+        GENERATED_BALLS_OF_COLOR[index]++;
+    }
+
+    return COLORS[index];
 }
 
 struct BALL generate_ball()
@@ -39,9 +50,17 @@ struct BALL generate_ball()
     BALL b;
 
     b.position = 0;
-    b.color = generate_random_color();
+    b.color = generate_random_color(false);
 
     return b;
+}
+
+void initialize_generated_balls_at_color_array()
+{
+    for(int i = 0; i < AMOUNT_OF_COLORS; i++)
+    {
+        GENERATED_BALLS_OF_COLOR[i] = 0;
+    }
 }
 
 void shift_array(BALL *a, int n, int d) 
@@ -53,9 +72,39 @@ void shift_array(BALL *a, int n, int d)
    }
 }
 
-void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort projectile_speed, ushort balls_speed)
+void prepare_for_level(int level, int delay_in_seconds, ALLEGRO_EVENT_QUEUE *queue)
+{
+    ALLEGRO_FONT *title_font = al_load_font("../font/default_font.ttf", 56, 0),
+                 *subtitle_font = al_load_font("../font/default_font.ttf", 16, 0);
+
+    while(delay_in_seconds-- > 0)
+    {
+        al_clear_to_color(al_map_rgb(0,0,0));
+
+        al_draw_textf(title_font, al_map_rgb(255,255,255), GAME_WIDTH / 2, GAME_HEIGHT / 2 - 61, ALLEGRO_ALIGN_CENTER, "LEVEL %d", LEVEL);
+        
+        al_draw_textf(subtitle_font, al_map_rgb(255,255,255), GAME_WIDTH / 2, GAME_HEIGHT / 2 - 7, ALLEGRO_ALIGN_CENTER, "Começando em %d segundos", delay_in_seconds + 1);
+
+        al_flip_display();        
+
+        al_rest(1);
+    }
+
+    ALLEGRO_EVENT event;
+
+    while(al_get_next_event(queue, &event)) { } // Esvaziar a fila de eventos
+}
+
+void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort start_amout_of_balls, ushort balls_speed)
 {
     write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função exibir_janela_jogo.");
+
+    COLORS[0] = al_map_rgb(255, 143, 143);
+    COLORS[1] = al_map_rgb(143, 255, 143);
+    COLORS[2] = al_map_rgb(143, 143, 255);
+    COLORS[3] = al_map_rgb(255, 255, 123);
+    COLORS[4] = al_map_rgb(255, 123, 255);
+    COLORS[5] = al_map_rgb(123, 255, 255);
 
     ALLEGRO_DISPLAY *game_display;
     ALLEGRO_EVENT_QUEUE *game_event_queue;
@@ -94,7 +143,7 @@ void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort pro
         exit(EXIT_FAILURE);
     }
 
-    game_font = al_load_font("../font/default_font.ttf", 12, 0);
+    game_font = al_load_font("../font/default_font.ttf", 20, 0);
 
     if (!game_font)
     {
@@ -108,19 +157,25 @@ void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort pro
     al_register_event_source(game_event_queue, al_get_display_event_source(game_display));
     al_register_event_source(game_event_queue, al_get_mouse_event_source());
 
-    PROJECTILE_SPEED = projectile_speed;
-    BALLS_SPEED = balls_speed;
-    LEVEL = level;
+    PROJECTILE_SPEED = 15;
+    LEVEL = level - 1;
+    BALLS_SPEED = balls_speed + ((balls_speed / 4) * (LEVEL / 4));
     GAME_MODE = game_mode;
     PLAYER_SCORE = 0;
 
     int game_return_code;
 
-    while((game_return_code = Jogar(game_display, game_event_queue, game_font)) == GAME_RETURN_CODE_WON)
+    do
     {
-        // XXX Exibir informações (posição no ranking, pontos, etc.)
+        BALLS_SPEED = balls_speed + ((balls_speed / 4) * (LEVEL / 4));
+        BALLS_TO_COME = start_amout_of_balls + (20 * LEVEL);
         LEVEL++;
-    }
+
+        prepare_for_level(LEVEL, 3, game_event_queue);
+
+        game_return_code = jogar(game_display, game_event_queue, game_font);
+
+    } while(game_return_code == GAME_RETURN_CODE_WON);
 
     if(game_return_code == GAME_RETURN_CODE_LOST)
     {
@@ -136,9 +191,9 @@ void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort pro
     write_log(DEBUG_LEVEL_ALL, true, "Deixando a função exibir_janela_jogo.");
 }
 
-void CarregarLevel(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **map_info)
+void carregar_level(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **map_info)
 {
-    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função CarregarLevel.");
+    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função carregar_level.");
 
     char file_name[] = "level_x.csv";
 
@@ -202,20 +257,17 @@ void CarregarLevel(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **m
     // Voltar ao início do arquivo
     rewind(level_info);
 
-    int position = 0, track = 0, point_x, point_y;
+    int position = 0, track = 0, point_x, point_y, vulnerable;
 
     POINT *p = &(*map_info)->tracks[0].path[0];
 
-    int temp;
-
-    while(fscanf(level_info, "%d,%d,%d", &point_x, &point_y, &temp) == 3)
+    while(fscanf(level_info, "%d,%d,%d", &point_x, &point_y, &vulnerable) == 3)
     {
-        p->ball_vulnerable = (temp == 1);
-
         if(point_x >= 0 && point_y >= 0)
         {
             p = &(*map_info)->tracks[track].path[position++];
 
+            p->ball_vulnerable = vulnerable;
             p->x = point_x;
             p->y = point_y;
         }
@@ -230,16 +282,82 @@ void CarregarLevel(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **m
     
     fclose(level_info);
 
-    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função CarregarLevel.");
+    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função carregar_level.");
 }
 
-int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font)
+void reinicializar_tela(ALLEGRO_BITMAP *background, ALLEGRO_BITMAP *cannon_bg, ALLEGRO_BITMAP *cannon, double rotation_angle)
+{
+    al_clear_to_color(al_map_rgb(101,101,101));
+    al_draw_bitmap(background, 0, 0, 0);
+    al_draw_bitmap(cannon_bg, GAME_WIDTH / 2 - 53, GAME_HEIGHT / 2 - 53, 0);
+    al_draw_rotated_bitmap(cannon, 53, 53, GAME_WIDTH / 2, GAME_HEIGHT / 2, rotation_angle - M_PI, 0);
+}
+
+int avancar_bolinhas(MAP_INFO *map_info, BALL *ball_at_track[], int *created_balls_at_track, int extra_deslocamento)
+{
+    for(int i = 0; i < map_info->map_length; i++)
+    {
+        for(int j = 0; j < created_balls_at_track[i]; j++)
+        {
+            BALL *b = &ball_at_track[i][j];
+
+            b->position += (1 + extra_deslocamento);
+
+            if(b->position >= map_info->tracks[i].track_length)
+            {
+                b->position = map_info->tracks[i].track_length - 1;
+
+                created_balls_at_track[i]--;
+
+                return i;
+            }
+        }
+    }
+
+    return -1;
+}
+
+bool criar_bolinha(int track, MAP_INFO *map_info, BALL *ball_at_track[], int *created_balls_at_track)
+{
+    if(created_balls_at_track[track] > 0)
+    {
+        shift_array(ball_at_track[track], created_balls_at_track[track], 1);
+    }
+
+    ball_at_track[track][0] = generate_ball();
+
+    BALLS_TO_COME--;
+
+    created_balls_at_track[track]++;
+}
+
+void desenhar_bolinhas(MAP_INFO *map_info, BALL *ball_at_track[], int *created_balls_at_track)
+{
+    for(int i = 0; i < map_info->map_length; i++)
+    {
+        for(int j = 0; j < created_balls_at_track[i]; j++)
+        {
+            BALL b = ball_at_track[i][j];
+
+            POINT p = map_info->tracks[i].path[b.position];
+
+            if(p.ball_vulnerable > 0)
+            {
+                al_draw_filled_circle(p.x, p.y, p.ball_vulnerable == 1 ? GAME_PROJECTILE_RADIUS : GAME_NEXT_PROJECTILE_RADIUS, b.color);
+                //al_draw_text(font, al_map_rgb(0, 0, 0), p.x, p.y, 0, convert_int(p.ball_vulnerable));
+            }
+            
+        }
+    } 
+}
+
+int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font)
 {
     write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função Jogar.");
 
     bool fired_projectile = false, projectile_on_way = false, hold_positions = false, hold_creation = false, fix_differences = false;
 
-    int mouseX = 0, mouseY = 0, game_return_code = -1, last_position_update = 0, last_colision_track = -1, last_colision_index = -1, point_acumulator = 10, losing_track = -1;;
+    int mouseX = 0, mouseY = 0, game_return_code = -1, next_position_update = 0, last_colision_track = -1, last_colision_index = -1, point_acumulator = 10, losing_track = -1;;
 
     double speedX, speedY;
 
@@ -251,7 +369,9 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
     ALLEGRO_BITMAP *cannon_bg = load_image("../img/game/cannon_bg.png");
     ALLEGRO_BITMAP *cannon = load_image("../img/game/cannon.png");
 
-    CarregarLevel(&background, &map_info);
+    initialize_generated_balls_at_color_array();
+
+    carregar_level(&background, &map_info);
 
     /*
     for(int i = 0; i < map_info->map_length; i++)
@@ -269,8 +389,8 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                next_projectile,
                on_way_projectile;
 
-    current_projectile.color = generate_random_color();
-    next_projectile.color = generate_random_color();
+    current_projectile.color = COLORS[rand() % (4 + ((LEVEL - 1) / 3))];
+    next_projectile.color = COLORS[rand() % (4 + ((LEVEL - 1) / 3))];
 
     BALL *ball_at_track[map_info->map_length];
 
@@ -298,7 +418,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
         {
             ALLEGRO_EVENT event;
 
-            al_wait_for_event(event_queue, &event);
+            al_get_next_event(event_queue, &event);
 
             if(event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
             {
@@ -330,21 +450,18 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
         double rotation_angle = atan2f(mouseX - (GAME_WIDTH / 2), mouseY - (GAME_HEIGHT / 2)) * -1 + M_PI;
 
-        al_clear_to_color(al_map_rgb(101,101,101));
-        al_draw_bitmap(background, 0, 0, 0);
+        reinicializar_tela(background, cannon_bg, cannon, rotation_angle);
 
-        al_draw_line(GAME_WIDTH / 2, GAME_HEIGHT / 2, mouseX, mouseY, al_map_rgb(255,0,0), 3.0);
-        al_draw_bitmap(cannon_bg, GAME_WIDTH / 2 - 53, GAME_HEIGHT / 2 - 53, 0);
-        al_draw_rotated_bitmap(cannon, 53, 53, GAME_WIDTH / 2, GAME_HEIGHT / 2, rotation_angle - M_PI, 0);
-        
-        al_draw_multiline_textf(font, al_map_rgb(0, 0, 0), mouseX + 15, mouseY + 15, 300.0, 12.0, ALLEGRO_ALIGN_LEFT, "angle %.2frad (%.2fdeg)\nsin %.2f\ncos %.2f", rotation_angle, rotation_angle * 57.2958, sin(rotation_angle), cos(rotation_angle));
-        al_draw_multiline_textf(font, al_map_rgb(0, 0, 0), 5, 5, 300.0, 12.0, ALLEGRO_ALIGN_LEFT, "NÍVEL: %d\nPONTOS: %d", LEVEL, PLAYER_SCORE);
+        //al_draw_line(GAME_WIDTH / 2, GAME_HEIGHT / 2, mouseX, mouseY, al_map_rgb(255,0,0), 3.0);
+
+        //al_draw_multiline_textf(font, al_map_rgb(0, 0, 0), mouseX + 15, mouseY + 15, 300.0, 12.0, ALLEGRO_ALIGN_LEFT, "angle %.2frad (%.2fdeg)\nsin %.2f\ncos %.2f", rotation_angle, rotation_angle * 57.2958, sin(rotation_angle), cos(rotation_angle));
+        al_draw_multiline_textf(font, al_map_rgb(0, 0, 0), GAME_WIDTH - 5, 5, 100.0, 18.0, ALLEGRO_ALIGN_RIGHT, "NÍVEL: %d\nPONTOS: %d", LEVEL, PLAYER_SCORE);
 
         if(fired_projectile)
         {
             on_way_projectile = current_projectile;
             current_projectile = next_projectile;
-            next_projectile.color = generate_random_color();
+            next_projectile.color = generate_random_color(true);
             projectile_on_way = true;
             fired_projectile = false;
         }
@@ -360,47 +477,28 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
         if(!hold_positions)
         {
-            if(last_position_update <= 0)
+            if(next_position_update <= 0)
             {
-                last_position_update = 0;
-                last_position_update = GAME_FPS / BALLS_SPEED;
+                next_position_update = (GAME_FPS / BALLS_SPEED);
 
-                for(int i = 0; i < map_info->map_length; i++)
+                losing_track = avancar_bolinhas(map_info, ball_at_track, created_balls_at_track, 0);
+
+                if(losing_track >= 0)
                 {
-                    for(int j = 0; j < created_balls_at_track[i]; j++)
+                    game_return_code = GAME_RETURN_CODE_LOST;
+                }
+                else if(!hold_creation && BALLS_TO_COME > 0)
+                {
+                    for(int i = 0; i < map_info->map_length; i++)
                     {
-                        BALL *b = &ball_at_track[i][j];
-
-                        b->position += BALLS_SPEED / 50;
-
-                        if(b->position >= map_info->tracks[i].track_length)
+                        if(created_balls_at_track[i] < max_balls_per_track[i] && (created_balls_at_track[i] == 0 || ball_at_track[i][0].position > (GAME_PROJECTILE_RADIUS * 2)))
                         {
-                            b->position = map_info->tracks[i].track_length - 1;
-
-                            losing_track = i;
-
-                            game_return_code = GAME_RETURN_CODE_LOST;
+                            criar_bolinha(i, map_info, ball_at_track, created_balls_at_track);
                         }
-                    }
-
-                    bool create_new_ball = created_balls_at_track[i] == 0 ||
-                                           (created_balls_at_track[i] < max_balls_per_track[i] && ball_at_track[i][0].position > (GAME_PROJECTILE_RADIUS * 2));
-                    
-                    if(!hold_creation && create_new_ball)
-                    {
-                        if(created_balls_at_track[i] > 0)
-                        {
-                            shift_array(ball_at_track[i], created_balls_at_track[i], 1);
-                        }
-
-                        ball_at_track[i][0] = generate_ball();
-
-                        created_balls_at_track[i]++;
                     }
                 }
             }
-
-            last_position_update--;
+            next_position_update--;
         }
         else
         {
@@ -453,7 +551,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
                         i = last_colision_index - 1;
 
-                        while(i > 0 && colors_match(ball_at_track[last_colision_track][i--].color, ball_at_track[last_colision_track][last_colision_index].color))
+                        while(i >= 0 && colors_match(ball_at_track[last_colision_track][i--].color, ball_at_track[last_colision_track][last_colision_index].color))
                         {
                             equal_balls_left++;
                         }
@@ -468,6 +566,8 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
                         if(destroyed_any)
                         {
+                            ALLEGRO_COLOR destroyed_color = ball_at_track[last_colision_track][last_colision_index].color;
+
                             int total = equal_balls_left + equal_balls_right, removidas;
 
                             PLAYER_SCORE += total * point_acumulator;
@@ -488,6 +588,55 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                                 }
                             }
                             created_balls_at_track[last_colision_track] -= total;
+
+                            if(last_colision_index == 0 && created_balls_at_track[last_colision_track] > 0)
+                            {
+                                ball_at_track[last_colision_track][0].position -= (total * GAME_PROJECTILE_RADIUS * 2);
+                            }
+
+                            if(BALLS_TO_COME == 0)
+                            {
+                                bool end_of_game = true;
+
+                                for(int j = 0; j < map_info->map_length; j++)
+                                {
+                                    if(created_balls_at_track[j] > 0)
+                                    {
+                                        end_of_game = false;
+                                        break;
+                                    }
+                                }
+
+                                if(end_of_game)
+                                {
+                                    game_return_code = GAME_RETURN_CODE_WON;
+                                }
+                            }
+                            
+                            if(game_return_code != GAME_RETURN_CODE_WON)
+                            {
+                                for(int j = 0; j < AMOUNT_OF_COLORS; j++)
+                                {
+                                    if(colors_match(COLORS[j], destroyed_color))
+                                    {
+                                        GENERATED_BALLS_OF_COLOR[j] -= total;
+
+                                        if(GENERATED_BALLS_OF_COLOR[j] <= 0)
+                                        {
+                                            if(colors_match(current_projectile.color, COLORS[j]))
+                                            {
+                                                current_projectile.color = generate_random_color(true);
+                                            }
+
+                                            if(colors_match(next_projectile.color, COLORS[j]))
+                                            {
+                                                next_projectile.color = generate_random_color(true);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
 
                             if(created_balls_at_track[last_colision_track] < 0)
                             {
@@ -512,22 +661,8 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                 last_colision_index = -1;
             }
         }
-            
-        for(int i = 0; i < map_info->map_length; i++)
-        {
-            for(int j = 0; j < created_balls_at_track[i]; j++)
-            {
-                BALL b = ball_at_track[i][j];
-
-                POINT p = map_info->tracks[i].path[b.position];
-
-                if(p.ball_vulnerable > 0)
-                {
-                    al_draw_filled_circle(p.x, p.y, p.ball_vulnerable == 1 ? GAME_PROJECTILE_RADIUS : GAME_NEXT_PROJECTILE_RADIUS, b.color);
-                    al_draw_text(font, al_map_rgb(0, 0, 0), p.x, p.y, 0, convert_int(j));
-                }
-            }
-        }
+        
+        desenhar_bolinhas(map_info, ball_at_track, created_balls_at_track);
 
         if(projectile_on_way)
         {
@@ -554,7 +689,7 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
                         POINT p = map_info->tracks[i].path[colision_ball->position];
 
-                        if((distance = distance_between_points(on_way_projectile.cord.x, on_way_projectile.cord.y, p.x, p.y)) <= GAME_NEXT_PROJECTILE_RADIUS * 2 + 20 && distance < best_distance)
+                        if(p.ball_vulnerable == 1 && (distance = distance_between_points(on_way_projectile.cord.x, on_way_projectile.cord.y, p.x, p.y)) <= GAME_NEXT_PROJECTILE_RADIUS * 2 + 20 && distance < best_distance)
                         {
                             best_distance = distance;
 
@@ -568,6 +703,8 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
                 if(colision_track >= 0)
                 {  
+                    colision_ball = &ball_at_track[colision_track][colision_index];
+
                     projectile_on_way = false;
                     hold_positions = true;
 
@@ -596,6 +733,14 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                     last_colision_index = colision_index;
                     
                     created_balls_at_track[colision_track]++;
+                
+                    for(int i = 0; i < AMOUNT_OF_COLORS; i++)
+                    {
+                        if(colors_match(COLORS[i], new_ball.color))
+                        {
+                            GENERATED_BALLS_OF_COLOR[i]++;
+                        }
+                    }
 
                     for(int i = 0; i < map_info->map_length; i++)
                     {
@@ -618,24 +763,48 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                 }
                 
             }
-        }
+        } 
 
         if(game_return_code == GAME_RETURN_CODE_LOST)
         {
+            int soma_bolinhas = 0;
+
+            do 
+            {
+                soma_bolinhas = 0;
+
+                reinicializar_tela(background, cannon_bg, cannon, rotation_angle);
+
+                avancar_bolinhas(map_info, ball_at_track, created_balls_at_track, 3);
+
+                desenhar_bolinhas(map_info, ball_at_track, created_balls_at_track);
+                
+                al_flip_display();
+
+                for(int i = 0; i < map_info->map_length; i++)
+                {
+                    soma_bolinhas += created_balls_at_track[i];
+                }
+
+            } while(soma_bolinhas > 0);
+
             ALLEGRO_BITMAP *explosion = load_image("../img/game/explosion.png");
 
             if(explosion != NULL)
             {
-                POINT p = map_info->tracks[losing_track].path[map_info->tracks[losing_track].track_length - 1];
+                for(int i = 0; i < map_info->map_length; i++)
+                {
+                    POINT p = map_info->tracks[i].path[map_info->tracks[i].track_length - 1];
 
-                al_draw_bitmap(explosion, p.x - 150, p.y - 150, 0);
-
+                    al_draw_bitmap(explosion, p.x - 150, p.y - 150, 0);
+                }
+                
                 al_destroy_bitmap(explosion);
             }
 
             al_flip_display();
 
-            al_rest(2);
+            al_rest(1);
         }
         else
         {

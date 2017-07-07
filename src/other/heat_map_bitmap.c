@@ -39,7 +39,7 @@ bool PASSED[IMAGE_WIDTH][IMAGE_HEIGHT];
 
 int PIXELS_FOUND = 0;
 
-POINT *criar_ponto(int x, int y, bool vulnerable)
+POINT *criar_ponto(int x, int y, int vulnerable)
 {
     struct POINT *p = (POINT *) malloc(sizeof(POINT));
 
@@ -141,7 +141,20 @@ void map_image(int startX, int startY, int direcao)
     PIXELS_FOUND++;
     PASSED[startX][startY] = true;
 
-    int vulnerable = (c.r > 0.5 ? 1 : (c.g > 0.5 ? 0 : 2));
+    int vulnerable;
+
+    if(c.r > c.g && c.r > c.b)
+    {
+        vulnerable = 1;
+    }
+    else if(c.g > c.r && c.g > c.b)
+    {
+        vulnerable = 0;
+    }
+    else
+    {
+        vulnerable = 2;
+    }
 
     inserir_no_fim(criar_ponto(startX, startY, vulnerable));
 
@@ -168,8 +181,6 @@ void map_image(int startX, int startY)
         map_image(startX, startY, i);
     }
 }
-
-
 
 int main()
 {
