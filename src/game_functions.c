@@ -520,9 +520,12 @@ int Jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                 BALL b = ball_at_track[i][j];
 
                 POINT p = map_info->tracks[i].path[b.position];
-                
-                al_draw_filled_circle(p.x, p.y, GAME_PROJECTILE_RADIUS, b.color);
-                al_draw_text(font, al_map_rgb(0, 0, 0), p.x, p.y, 0, convert_int(j));
+
+                if(p.ball_vulnerable > 0)
+                {
+                    al_draw_filled_circle(p.x, p.y, p.ball_vulnerable == 1 ? GAME_PROJECTILE_RADIUS : GAME_NEXT_PROJECTILE_RADIUS, b.color);
+                    al_draw_text(font, al_map_rgb(0, 0, 0), p.x, p.y, 0, convert_int(j));
+                }
             }
         }
 

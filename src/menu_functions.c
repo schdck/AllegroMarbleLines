@@ -177,7 +177,7 @@ void exibir_janela_menu()
                         int x, y;
                         al_get_window_position(main_display, &x, &y);
 
-                        exibir_janela_jogo(x + 50, y + 50, GAME_MODE_NORMAL, 1, 15, 200);
+                        exibir_janela_jogo(x + 50, y + 50, GAME_MODE_NORMAL, 2, 15, 100);
 
                         al_set_target_backbuffer(main_display); 
 
