@@ -112,7 +112,7 @@ RECORDE *read_list_from_file(const char file_nome[])
 void exibir_tela_pos_jogo(ALLEGRO_DISPLAY *display, int player_score, int player_level)
 {
     ALLEGRO_FONT *title_font = al_load_font("../font/default_font.ttf", 72, 0);
-    ALLEGRO_FONT *normal_font = al_load_font("../font/default_font.ttf", 32, 0);
+    ALLEGRO_FONT *normal_font = al_load_font("../font/default_font.ttf", 24, 0);
     ALLEGRO_BITMAP *btn_sair = load_image("../img/menu/btn5.png");
     ALLEGRO_BITMAP *btn_sair_hover = load_image("../img/menu/btn5_hover.png");
     ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
@@ -211,23 +211,28 @@ void exibir_tela_pos_jogo(ALLEGRO_DISPLAY *display, int player_score, int player
 
         fps_start = al_get_time();
 
-        al_clear_to_color(al_map_rgb(0,0,0));   
+        al_clear_to_color(al_map_rgb(69,69,69));   
 
         al_draw_text(title_font, al_map_rgb(255, 255, 255), GAME_WIDTH / 2, 40, ALLEGRO_ALIGN_CENTER, "PLACAR DE LÍDERES");
 
-        int x1 = 45, x2 = GAME_WIDTH - 45, y = 150;
+        if(player_score > 0)
+        {
+            al_draw_textf(normal_font, al_map_rgb(255, 255, 255), GAME_WIDTH /2, 100, ALLEGRO_ALIGN_CENTER, "Você fez %d pontos", player_score);
+        }
 
-        al_draw_rectangle(x1, y, x2, y + 282, al_map_rgb(255,255,255), 3.0);
+        int x1 = 45, x2 = GAME_WIDTH - 45, y = 130;
 
-        y += 20;
+        al_draw_rectangle(x1, y, x2, y + 305, al_map_rgb(255,255,255), 3.0);
 
-        al_draw_text(normal_font, al_map_rgb(255, 255, 255), x1 + 020, y, ALLEGRO_ALIGN_LEFT, "NOME");
-        al_draw_text(normal_font, al_map_rgb(255, 255, 255), x2 - 170, y, ALLEGRO_ALIGN_CENTER, "PONTOS");
-        al_draw_text(normal_font, al_map_rgb(255, 255, 255), x2 - 070, y, ALLEGRO_ALIGN_CENTER, "LEVEL");
+        y += 15;
 
-        y += 30;
+        al_draw_text(normal_font, al_map_rgb(200, 200, 200), x1 + 020, y, ALLEGRO_ALIGN_LEFT, "NOME");
+        al_draw_text(normal_font, al_map_rgb(200, 200, 200), x2 - 170, y, ALLEGRO_ALIGN_CENTER, "PONTOS");
+        al_draw_text(normal_font, al_map_rgb(200, 200, 200), x2 - 070, y, ALLEGRO_ALIGN_CENTER, "NÍVEL");
 
-        for(int i = 0; i < 10; i++, y += 22)
+        y += 25;
+
+        for(int i = 0; i < 10; i++, y += 25)
         {
             al_draw_textf(normal_font, al_map_rgb(255, 255, 255), x1 + 020, y, ALLEGRO_ALIGN_LEFT, "%s", recordes[i].nome);
             al_draw_textf(normal_font, al_map_rgb(255, 255, 255), x2 - 170, y, ALLEGRO_ALIGN_CENTER, "%d", recordes[i].pontos);
@@ -253,21 +258,23 @@ void exibir_tela_pos_jogo(ALLEGRO_DISPLAY *display, int player_score, int player
 
             if(strlen(current->nome) == 0)
             {
-                al_draw_textf(normal_font, al_map_rgb(69,69,69), 50, 457, ALLEGRO_ALIGN_LEFT, " Insira seu nome (apenas letras e traços - max: 24)");
+                al_draw_textf(normal_font, al_map_rgb(69,69,69), 50, 460, ALLEGRO_ALIGN_LEFT, " Insira seu nome (apenas letras e traços - max: 24)");
 
                 if(show_pointer)
                 {
-                    al_draw_textf(normal_font, al_map_rgb(0,0,0), 50, 457, ALLEGRO_ALIGN_LEFT, "|");
+                    al_draw_textf(normal_font, al_map_rgb(0,0,0), 50, 460, ALLEGRO_ALIGN_LEFT, "|");
                 }
             }
             else
             {
-                al_draw_textf(normal_font, al_map_rgb(0,0,0), 50, 457, ALLEGRO_ALIGN_LEFT, " %s%s", current->nome, show_pointer ? "|" : "");
+                al_draw_textf(normal_font, al_map_rgb(0,0,0), 50, 460, ALLEGRO_ALIGN_LEFT, " %s%s", current->nome, show_pointer ? "|" : "");
             }
-            
 
-            al_draw_filled_rectangle(45, 510, MENU_WIDTH / 2 - 5, 560, selected_button == 0 ? al_map_rgb(255,0,0) : al_map_rgb(255,255,255));
-            al_draw_filled_rectangle(MENU_WIDTH / 2 + 5, 510, MENU_WIDTH - 45, 560, selected_button == 1 ? al_map_rgb(255,0,0) : al_map_rgb(255,255,255));
+            al_draw_filled_rectangle(45, 510, MENU_WIDTH / 2 - 5, 560, selected_button == 0 ? al_map_rgb(204,204,204) : al_map_rgb(255,51,0));
+            al_draw_filled_rectangle(MENU_WIDTH / 2 + 5, 510, MENU_WIDTH - 45, 560, selected_button == 1 ? al_map_rgb(204,204,204) : al_map_rgb(51,204,51));
+
+            al_draw_text(normal_font, al_map_rgb(0,0,0), (MENU_WIDTH / 2 - 5 + 45) / 2, 525 , ALLEGRO_ALIGN_CENTER, "SAIR");
+            al_draw_text(normal_font, al_map_rgb(0,0,0), (MENU_WIDTH / 2 + 5 + MENU_WIDTH - 45) / 2, 525, ALLEGRO_ALIGN_CENTER, "SALVAR");
         }
         else
         {
@@ -280,7 +287,9 @@ void exibir_tela_pos_jogo(ALLEGRO_DISPLAY *display, int player_score, int player
                 selected_button = -1;
             }
 
-            al_draw_filled_rectangle(45, 510, MENU_WIDTH - 45, 560, selected_button == 0 ? al_map_rgb(255,0,0) : al_map_rgb(255,255,255));
+            al_draw_filled_rectangle(45, 510, MENU_WIDTH - 45, 560, selected_button == 0 ? al_map_rgb(204,204,204) : al_map_rgb(255,51,0));
+
+            al_draw_text(normal_font, al_map_rgb(0,0,0), MENU_WIDTH / 2, 525 , ALLEGRO_ALIGN_CENTER, "SAIR");
         }
 
         al_flip_display();
