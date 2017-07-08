@@ -210,7 +210,7 @@ void carregar_level(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **
             *level_background = load_image("../img/game/level_2.png");
             file_name[6] = 2 + '0';
             break;
-        case 3:
+        case 0:
             *level_background = load_image("../img/game/level_3.png");
             file_name[6] = 3 + '0';
             break;
@@ -613,25 +613,31 @@ int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                                 if(end_of_game)
                                 {
                                     int c = 0;
+                                    bool increment = false;
 
                                     while(position_last_ball < map_info->tracks[last_colision_track].track_length)
                                     {
-                                        POINT p = map_info->tracks[last_colision_track].path[position_last_ball];
-
                                         reinicializar_tela(background, cannon_bg, cannon, rotation_angle, font);
 
-                                        al_draw_filled_circle(p.x, p.y, GAME_PROJECTILE_RADIUS, al_map_rgb(0,0,0));
-                                        
+                                        POINT prev = map_info->tracks[last_colision_track].path[position_last_ball - (GAME_PROJECTILE_RADIUS * 2)];
+                                        POINT curr = map_info->tracks[last_colision_track].path[position_last_ball];
+
+                                        al_draw_filled_circle(prev.x, prev.y, GAME_PROJECTILE_RADIUS, al_map_rgba(0,0,0,50));
+
+                                        al_draw_filled_circle(curr.x, curr.y, GAME_PROJECTILE_RADIUS, al_map_rgb(0,0,0));
+
                                         al_flip_display();
 
-                                        position_last_ball += 7;
+                                        position_last_ball += (GAME_PROJECTILE_RADIUS);
 
-                                        if(++c >= GAME_PROJECTILE_RADIUS * 2)
+                                        if(increment)
                                         {
-                                            c = 0;
-
                                             PLAYER_SCORE += 7;
                                         }
+                                        
+                                        al_rest(0.03);
+
+                                        increment = !increment;
                                     }
 
                                     reinicializar_tela(background, cannon_bg, cannon, rotation_angle, font);

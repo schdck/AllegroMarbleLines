@@ -19,11 +19,11 @@ void menu_DesenharImagens(int highlightIndex)
 {
     write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função DesenharImagens.");
 
-    int currentX = (MENU_WIDTH - 710) / 2, currentY = 225, increment = 70;
+    int currentX = (MENU_WIDTH - 710) / 2, currentY = 225, increment = 90;
 
     //Desenhar fundo
     ALLEGRO_BITMAP *image = load_image(FUNDO_PATH); 
-    al_draw_bitmap(image, 0, 0, 0);
+    //al_draw_bitmap(image, 0, 0, 0);
     al_destroy_bitmap(image);
 
     // Desenhar o logo
@@ -32,7 +32,7 @@ void menu_DesenharImagens(int highlightIndex)
     al_destroy_bitmap(image);
     
     // Até 10 imagens, caso contrário será necessário adaptar a forma em que elas são carregadas
-    const int quantidadeDeImagens = 6;
+    const int quantidadeDeImagens = 5;
     const char *imgsPath = "../img/menu/";
 
     for(int i = 1; i < quantidadeDeImagens; i++)
@@ -151,15 +151,13 @@ void exibir_janela_menu()
             {
                 int mouseX = event.mouse.x, mouseY = event.mouse.y;
 
-                if(mouseX >= 45 && mouseX <= 800 - 45)
+                if(mouseX >= 45 && mouseX <= mouseX <= (GAME_WIDTH - 45))
                 {
                     mouseY -= 225; // Altura do logo + margens
 
-                    float index = mouseY / 70.0;
+                    highlightIndex = (mouseY / 90) + 1;
 
-                    highlightIndex = ceil(index);
-
-                    if(mouseY - ((highlightIndex - 1) * 70.0) > 51)
+                    if(mouseY - ((highlightIndex - 1) * 90) > 51 || mouseY < 0)
                     {
                         highlightIndex = 0;
                     }
@@ -204,9 +202,6 @@ void exibir_janela_menu()
                         display_error(NULL, "", "Ajustes", "");
                         break;
                     case 4:
-                        display_error(NULL, "", "Créditos", "");
-                        break;
-                    case 5:
                         desejaSair = true;
                         break;
                 }

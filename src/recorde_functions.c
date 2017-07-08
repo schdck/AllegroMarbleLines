@@ -113,15 +113,7 @@ void exibir_tela_pos_jogo(ALLEGRO_DISPLAY *display, int player_score, int player
 {
     ALLEGRO_FONT *title_font = al_load_font("../font/default_font.ttf", 72, 0);
     ALLEGRO_FONT *normal_font = al_load_font("../font/default_font.ttf", 24, 0);
-    ALLEGRO_BITMAP *btn_sair = load_image("../img/menu/btn5.png");
-    ALLEGRO_BITMAP *btn_sair_hover = load_image("../img/menu/btn5_hover.png");
     ALLEGRO_EVENT_QUEUE *event_queue = al_create_event_queue();
-
-    if(!btn_sair_hover || !btn_sair)
-    {
-        display_error(NULL, "Erro fatal", "Erro ao inicializar imagens dos botões", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
-        exit(EXIT_FAILURE);
-    }
 
     if(!event_queue) 
     {
@@ -318,7 +310,5 @@ void exibir_tela_pos_jogo(ALLEGRO_DISPLAY *display, int player_score, int player
 
     al_destroy_font(title_font);
     al_destroy_font(normal_font);
-    al_destroy_bitmap(btn_sair);
-    al_destroy_bitmap(btn_sair_hover);
     al_destroy_event_queue(event_queue);
 }
