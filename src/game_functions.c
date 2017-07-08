@@ -112,6 +112,9 @@ void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort sta
 
     game_display = al_create_display(GAME_WIDTH, GAME_HEIGHT);
 
+    // exibir_tela_pos_jogo(game_display, 1, LEVEL);
+    // exit(EXIT_FAILURE);
+
     al_set_window_position(game_display, X, Y);
 
     if(!game_display) 
@@ -132,13 +135,6 @@ void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort sta
     if(!game_event_queue) 
     {
         display_error(NULL, "Erro fatal", "Erro ao inicializar fila de eventos", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
-        al_destroy_display(game_display);
-        exit(EXIT_FAILURE);
-    }
-
-    if(!al_init_primitives_addon())
-    {
-        display_error(NULL, "Erro fatal", "Erro ao inicializar extensão de primitivas gráficas", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(game_display);
         exit(EXIT_FAILURE);
     }
@@ -181,7 +177,7 @@ void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort sta
     {
         // XXX Oferecer opção líderes
 
-        exibir_tela_pos_jogo(PLAYER_SCORE);
+        exibir_tela_pos_jogo(game_display, PLAYER_SCORE, LEVEL);
     }
 
     al_destroy_font(game_font);
@@ -455,7 +451,7 @@ int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
         //al_draw_line(GAME_WIDTH / 2, GAME_HEIGHT / 2, mouseX, mouseY, al_map_rgb(255,0,0), 3.0);
 
         //al_draw_multiline_textf(font, al_map_rgb(0, 0, 0), mouseX + 15, mouseY + 15, 300.0, 12.0, ALLEGRO_ALIGN_LEFT, "angle %.2frad (%.2fdeg)\nsin %.2f\ncos %.2f", rotation_angle, rotation_angle * 57.2958, sin(rotation_angle), cos(rotation_angle));
-        al_draw_multiline_textf(font, al_map_rgb(0, 0, 0), GAME_WIDTH - 5, 5, 100.0, 18.0, ALLEGRO_ALIGN_RIGHT, "NÍVEL: %d\nPONTOS: %d", LEVEL, PLAYER_SCORE);
+        al_draw_multiline_textf(font, al_map_rgb(0, 0, 0), GAME_WIDTH - 5, 5, 500.0, 18.0, ALLEGRO_ALIGN_RIGHT, "NÍVEL: %d\nPONTOS: %d", LEVEL, PLAYER_SCORE);
 
         if(fired_projectile)
         {

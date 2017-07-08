@@ -27,6 +27,6 @@
 #define     DEBUG_LEVEL_INFO            3
 #define     DEBUG_LEVEL_ALL             4
 
-#define     CURRENT_DEBUG_LEVEL         DEBUG_LEVEL_ALL
+#define     CURRENT_DEBUG_LEVEL         DEBUG_LEVEL_INFO
 
 #endif // __CONSTANTS_H_

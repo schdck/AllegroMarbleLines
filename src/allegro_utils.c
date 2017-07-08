@@ -2,6 +2,7 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_font.h>
+#include <allegro5/allegro_primitives.h>
 
 #include "../include/utils.h"
 #include "../include/allegro_utils.h"
@@ -37,9 +38,21 @@ int inicializar_allegro5()
         returnCode = 0;
     }
 
+    if(!al_init_primitives_addon())
+    {
+        display_error(NULL, "Erro fatal", "Erro ao carregar a extensão de primitivas gráficas", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        returnCode = 0;
+    }
+
     if(!al_install_mouse())
     {
         display_error(NULL, "Erro fatal", "Erro ao carregar ao inicializar o mouse", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        returnCode = 0;
+    }
+
+    if (!al_install_keyboard())
+    {
+        display_error(NULL, "Erro fatal", "Erro ao carregar ao inicializar o teclado", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         returnCode = 0;
     }
 

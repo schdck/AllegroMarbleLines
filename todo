@@ -1,25 +1,22 @@
 # Programação
-
 * Implementar sistema de pontuação extra de acordo com última bolinha destruída
-* Sistema de recordes
-
 * Criar páginas
     * Créditos
     * Ajuda
-    * Líderes
 
 # Design
-
-* Terminar de desenhar mapas
+* Desenhar mapa 3 (+ heatmaps)
 * Criar arquivo de ajuda (.pdf ou .html - fazer no word)
 * Terminar menu
     * Trocar "ajustes" por "ajuda"
+* Fazer botões salvar/cancelar -> página de líderes
+
+# Outros
+* Testar sistema de recordes
 
 # Corrigir
-
 * Espaço entre curvas
 
 # Dúvidas
-
 * Só é possível gerar bolas de cores que estão na trilha. O que acontece se meu próximo projétil é vermelho e eu destruir o último vermelho?
     * Estamos trocando a cor do projétil

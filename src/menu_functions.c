@@ -11,8 +11,9 @@
 #include "../include/constants.h"
 #include "../include/utils.h"
 #include "../include/allegro_utils.h"
-#include "../include/menu_functions.h"
+#include "../include/recorde_functions.h"
 #include "../include/game_functions.h"
+#include "../include/menu_functions.h"
 
 void menu_DesenharImagens(int highlightIndex)
 {
@@ -184,13 +185,20 @@ void exibir_janela_menu()
 
                         exibir_janela_jogo(x + 50, y + 50, GAME_MODE_NORMAL, 1, 20, 30);
 
-                        al_set_target_backbuffer(main_display); 
+                        al_set_target_backbuffer(main_display);
+
+                        highlightIndex = -1; 
 
                         while(al_get_next_event(event_queue, &event)) { } // Esvaziar a fila de eventos
 
                         break;
                     case 2:
-                        display_error(NULL, "", "Recordes", "");
+                        exibir_tela_pos_jogo(main_display, -1, -1);
+
+                        highlightIndex = -1;
+
+                        while(al_get_next_event(event_queue, &event)) { } // Esvaziar a fila de eventos
+
                         break;
                     case 3:
                         display_error(NULL, "", "Ajustes", "");
