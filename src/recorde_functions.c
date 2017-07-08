@@ -295,7 +295,7 @@ void exibir_tela_pos_jogo(ALLEGRO_DISPLAY *display, int player_score, int player
 
     if(selected_button == 1)
     {
-        for(int i = index_with_score + 1; i < 10; i++)
+        for(int i = 9; i > index_with_score; i--)
         {
             recordes[i] = recordes[i - 1];
         }
