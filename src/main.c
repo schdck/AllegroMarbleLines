@@ -16,7 +16,7 @@ Para compilar, navegar até a pasta 'src' e utilizar o comando:
 
 g++ -o ../app *.c -I/usr/include/allegro5 -L/usr/lib -lallegro -lallegro_image -lallegro_dialog -lallegro_font -lallegro_ttf -lallegro_primitives
 
-Para executar, navegar até a pasta 'src' e utilizar o comand:
+Para executar, navegar até a pasta 'src' e utilizar o comando:
 
 ../app
 
