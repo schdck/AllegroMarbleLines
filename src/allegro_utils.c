@@ -2,6 +2,7 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_primitives.h>
 
 #include "../include/utils.h"
@@ -54,6 +55,18 @@ int inicializar_allegro5()
     {
         display_error(NULL, "Erro fatal", "Erro ao carregar ao inicializar o teclado", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         returnCode = 0;
+    }
+
+    if (!al_init_font_addon())
+    {
+        display_error(NULL, "Erro fatal", "Erro ao inicializar extensão de fontes", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        exit(EXIT_FAILURE);
+    }
+ 
+    if (!al_init_ttf_addon())
+    {
+        display_error(NULL, "Erro fatal", "Erro ao inicializar extensão de fontes TTF", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
+        exit(EXIT_FAILURE);
     }
 
     return returnCode;

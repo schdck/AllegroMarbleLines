@@ -11,6 +11,7 @@
 #include "../include/constants.h"
 #include "../include/utils.h"
 #include "../include/allegro_utils.h"
+#include "../include/help_functions.h"
 #include "../include/recorde_functions.h"
 #include "../include/game_functions.h"
 #include "../include/menu_functions.h"
@@ -82,32 +83,11 @@ void show_menu_screen()
         exit(EXIT_FAILURE);
     }
 
-    if(!al_set_system_mouse_cursor(main_display, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT))
-    {
-        display_error(NULL, "Erro fatal", "Erro ao inicializar ponteiro do mouse", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
-        al_destroy_display(main_display);
-        exit(EXIT_FAILURE);
-    }
-
     event_queue = al_create_event_queue();
 
     if(!event_queue) 
     {
         display_error(NULL, "Erro fatal", "Erro ao inicializar fila de eventos", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
-        al_destroy_display(main_display);
-        exit(EXIT_FAILURE);
-    }
-
-    if (!al_init_font_addon())
-    {
-        display_error(NULL, "Erro fatal", "Erro ao inicializar extensão de fontes", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
-        al_destroy_display(main_display);
-        exit(EXIT_FAILURE);
-    }
- 
-    if (!al_init_ttf_addon())
-    {
-        display_error(NULL, "Erro fatal", "Erro ao inicializar extensão de fontes TTF", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
         exit(EXIT_FAILURE);
     }
@@ -118,6 +98,12 @@ void show_menu_screen()
     {
         display_error(NULL, "Erro fatal", "Erro ao carregar fonte padrão", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         al_destroy_display(main_display);
+        exit(EXIT_FAILURE);
+    }
+
+    if(!al_set_system_mouse_cursor(main_display, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT))
+    {
+        display_error(NULL, "Erro fatal", "Erro ao inicializar ponteiro do mouse", "Esperamos resolver isso em breve. O aplicativo será encerrado.");
         exit(EXIT_FAILURE);
     }
 
@@ -199,7 +185,12 @@ void show_menu_screen()
 
                         break;
                     case 3:
-                        display_error(NULL, "", "Ajustes", "");
+                        show_help_screen(main_display);
+
+                        highlightIndex = -1;
+
+                        while(al_get_next_event(event_queue, &event)) { } // Esvaziar a fila de eventos
+                        
                         break;
                     case 4:
                         desejaSair = true;
