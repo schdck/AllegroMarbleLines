@@ -196,7 +196,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    IMAGE = al_load_bitmap("/home/mvschmaedeck/Documents/AllegroMarbleLines/design/heatmaps/level_2_2.png");
+    IMAGE = al_load_bitmap("/home/mvschmaedeck/Documents/AllegroMarbleLines/design/heatmaps/level_3_2.png");
 
     if(IMAGE == NULL)
     {
@@ -218,9 +218,9 @@ int main()
 
     al_draw_bitmap(IMAGE, 0, 0, 0);
 
-    for(y = IMAGE_HEIGHT - 1; y >= 0 && !found_start; y--)
+    for(y = IMAGE_HEIGHT; y >= 0 && !found_start; y--)
     {
-        for(x = IMAGE_WIDTH - 1; x >= 0 && !found_start; x--)
+        for(x = 0; x < IMAGE_WIDTH && !found_start; x++)
         {
             PASSED[x][y] = true;
 
