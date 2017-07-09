@@ -21,7 +21,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    exibir_janela_menu();
+    show_menu_screen();
 
     exit(EXIT_SUCCESS);
 }

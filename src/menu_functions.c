@@ -15,7 +15,7 @@
 #include "../include/game_functions.h"
 #include "../include/menu_functions.h"
 
-void menu_DesenharImagens(int highlightIndex)
+void draw_menu_images(int highlightIndex)
 {
     write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função DesenharImagens.");
 
@@ -66,9 +66,9 @@ void menu_DesenharImagens(int highlightIndex)
     write_log(DEBUG_LEVEL_ALL, true, "Deixando a função DesenharImagens.");
 }
 
-void exibir_janela_menu()
+void show_menu_screen()
 {
-    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função exibir_janela_menu.");
+    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função show_menu_screen.");
 
     ALLEGRO_DISPLAY *main_display = NULL;
     ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -133,7 +133,7 @@ void exibir_janela_menu()
     {
         al_clear_to_color(al_map_rgb(0,0,0));
 
-        menu_DesenharImagens(highlightIndex);
+        draw_menu_images(highlightIndex);
 
         al_flip_display();
 
@@ -181,7 +181,7 @@ void exibir_janela_menu()
                         int x, y;
                         al_get_window_position(main_display, &x, &y);
 
-                        exibir_janela_jogo(x + 50, y + 50, GAME_MODE_NORMAL, 1, 20, 90);
+                        show_game_screen(x + 50, y + 50, GAME_MODE_NORMAL, 1, 20, 90);
 
                         al_set_target_backbuffer(main_display);
 
@@ -191,7 +191,7 @@ void exibir_janela_menu()
 
                         break;
                     case 2:
-                        exibir_tela_pos_jogo(main_display, -1, -1);
+                        show_aftergame_screen(main_display, -1, -1);
 
                         highlightIndex = -1;
 
@@ -211,5 +211,5 @@ void exibir_janela_menu()
 
     al_destroy_display(main_display);
 
-    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função exibir_janela_menu.");
+    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função show_menu_screen.");
 }

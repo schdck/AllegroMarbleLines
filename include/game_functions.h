@@ -28,6 +28,6 @@ struct MAP_INFO {
     int map_length;
 };
 
-void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort start_amout_of_balls, ushort balls_speed);
+void show_game_screen(int X, int Y, ushort game_mode, ushort level, ushort start_amout_of_balls, ushort balls_speed);
 
 #endif // __GAME_FUNCTIONS_H_

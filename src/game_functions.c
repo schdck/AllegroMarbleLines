@@ -26,7 +26,7 @@ static ushort GAME_MODE;
 static ushort LEVEL;
 static int PLAYER_SCORE;
 
-int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font);
+int play(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font);
 
 struct ALLEGRO_COLOR generate_random_color(bool is_for_projectile)
 {
@@ -95,9 +95,9 @@ void prepare_for_level(int level, int delay_in_seconds, ALLEGRO_EVENT_QUEUE *que
     while(al_get_next_event(queue, &event)) { } // Esvaziar a fila de eventos
 }
 
-void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort start_amout_of_balls, ushort balls_speed)
+void show_game_screen(int X, int Y, ushort game_mode, ushort level, ushort start_amout_of_balls, ushort balls_speed)
 {
-    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função exibir_janela_jogo.");
+    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função show_game_screen.");
 
     COLORS[0] = al_map_rgb(255, 143, 143);
     COLORS[1] = al_map_rgb(143, 255, 143);
@@ -166,7 +166,7 @@ void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort sta
 
         prepare_for_level(LEVEL, 3, game_event_queue);
 
-        game_return_code = jogar(game_display, game_event_queue, game_font);
+        game_return_code = play(game_display, game_event_queue, game_font);
 
     } while(game_return_code == GAME_RETURN_CODE_WON);
 
@@ -184,19 +184,19 @@ void exibir_janela_jogo(int X, int Y, ushort game_mode, ushort level, ushort sta
 
         al_rest(2.0);
 
-        exibir_tela_pos_jogo(game_display, PLAYER_SCORE, LEVEL);
+        show_aftergame_screen(game_display, PLAYER_SCORE, LEVEL);
     }
 
     al_destroy_font(game_font);
     al_destroy_event_queue(game_event_queue);
     al_destroy_display(game_display);
 
-    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função exibir_janela_jogo.");
+    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função show_game_screen.");
 }
 
-void carregar_level(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **map_info)
+void load_level(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **map_info)
 {
-    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função carregar_level.");
+    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função load_level.");
 
     char file_name[] = "level_x.csv";
 
@@ -285,10 +285,10 @@ void carregar_level(struct ALLEGRO_BITMAP **level_background, struct MAP_INFO **
     
     fclose(level_info);
 
-    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função carregar_level.");
+    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função load_level.");
 }
 
-void reinicializar_tela(ALLEGRO_BITMAP *background, ALLEGRO_BITMAP *cannon_bg, ALLEGRO_BITMAP *cannon, double rotation_angle, ALLEGRO_FONT *font)
+void reset_screen(ALLEGRO_BITMAP *background, ALLEGRO_BITMAP *cannon_bg, ALLEGRO_BITMAP *cannon, double rotation_angle, ALLEGRO_FONT *font)
 {
     al_clear_to_color(al_map_rgb(101,101,101));
     al_draw_bitmap(background, 0, 0, 0);
@@ -299,7 +299,7 @@ void reinicializar_tela(ALLEGRO_BITMAP *background, ALLEGRO_BITMAP *cannon_bg, A
     al_draw_multiline_textf(font, al_map_rgb(0, 0, 0), GAME_WIDTH - 5, 5, 500.0, 18.0, ALLEGRO_ALIGN_RIGHT, "NÍVEL: %d\nPONTOS: %d", LEVEL, PLAYER_SCORE);
 }
 
-int avancar_bolinhas(MAP_INFO *map_info, BALL *ball_at_track[], int *created_balls_at_track, int extra_deslocamento)
+int advance_balls(MAP_INFO *map_info, BALL *ball_at_track[], int *created_balls_at_track, int extra_deslocamento)
 {
     for(int i = 0; i < map_info->map_length; i++)
     {
@@ -323,7 +323,7 @@ int avancar_bolinhas(MAP_INFO *map_info, BALL *ball_at_track[], int *created_bal
     return -1;
 }
 
-bool criar_bolinha(int track, MAP_INFO *map_info, BALL *ball_at_track[], int *created_balls_at_track)
+bool create_ball_at_track(int track, MAP_INFO *map_info, BALL *ball_at_track[], int *created_balls_at_track)
 {
     if(created_balls_at_track[track] > 0)
     {
@@ -337,7 +337,7 @@ bool criar_bolinha(int track, MAP_INFO *map_info, BALL *ball_at_track[], int *cr
     created_balls_at_track[track]++;
 }
 
-void desenhar_bolinhas(MAP_INFO *map_info, BALL *ball_at_track[], int *created_balls_at_track)
+void draw_balls(MAP_INFO *map_info, BALL *ball_at_track[], int *created_balls_at_track)
 {
     for(int i = 0; i < map_info->map_length; i++)
     {
@@ -357,9 +357,9 @@ void desenhar_bolinhas(MAP_INFO *map_info, BALL *ball_at_track[], int *created_b
     } 
 }
 
-int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font)
+int play(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FONT *font)
 {
-    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função Jogar.");
+    write_log(DEBUG_LEVEL_ALL, true, "Iniciando a função play.");
 
     bool fired_projectile = false, projectile_on_way = false, hold_positions = false, hold_creation = false, fix_differences = false;
 
@@ -377,7 +377,7 @@ int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
     initialize_generated_balls_at_color_array();
 
-    carregar_level(&background, &map_info);
+    load_level(&background, &map_info);
 
     /*
     for(int i = 0; i < map_info->map_length; i++)
@@ -456,7 +456,7 @@ int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
         double rotation_angle = atan2f(mouseX - (GAME_WIDTH / 2), mouseY - (GAME_HEIGHT / 2)) * -1 + M_PI;
 
-        reinicializar_tela(background, cannon_bg, cannon, rotation_angle, font);
+        reset_screen(background, cannon_bg, cannon, rotation_angle, font);
 
         if(fired_projectile)
         {
@@ -482,7 +482,7 @@ int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
             {
                 next_position_update = (GAME_FPS / BALLS_SPEED);
 
-                losing_track = avancar_bolinhas(map_info, ball_at_track, created_balls_at_track, 0);
+                losing_track = advance_balls(map_info, ball_at_track, created_balls_at_track, 0);
 
                 if(losing_track >= 0)
                 {
@@ -494,7 +494,7 @@ int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                     {
                         if(created_balls_at_track[i] < max_balls_per_track[i] && (created_balls_at_track[i] == 0 || ball_at_track[i][0].position > (GAME_PROJECTILE_RADIUS * 2)))
                         {
-                            criar_bolinha(i, map_info, ball_at_track, created_balls_at_track);
+                            create_ball_at_track(i, map_info, ball_at_track, created_balls_at_track);
                         }
                     }
                 }
@@ -617,7 +617,7 @@ int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
 
                                     while(position_last_ball < map_info->tracks[last_colision_track].track_length)
                                     {
-                                        reinicializar_tela(background, cannon_bg, cannon, rotation_angle, font);
+                                        reset_screen(background, cannon_bg, cannon, rotation_angle, font);
 
                                         POINT prev = map_info->tracks[last_colision_track].path[position_last_ball - (GAME_PROJECTILE_RADIUS * 2)];
                                         POINT curr = map_info->tracks[last_colision_track].path[position_last_ball];
@@ -640,7 +640,7 @@ int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
                                         increment = !increment;
                                     }
 
-                                    reinicializar_tela(background, cannon_bg, cannon, rotation_angle, font);
+                                    reset_screen(background, cannon_bg, cannon, rotation_angle, font);
                                     al_flip_display();
 
                                     al_rest(2);
@@ -698,7 +698,7 @@ int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
             }
         }
         
-        desenhar_bolinhas(map_info, ball_at_track, created_balls_at_track);
+        draw_balls(map_info, ball_at_track, created_balls_at_track);
 
         if(projectile_on_way)
         {
@@ -809,11 +809,11 @@ int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
             {
                 soma_bolinhas = 0;
 
-                reinicializar_tela(background, cannon_bg, cannon, rotation_angle, font);
+                reset_screen(background, cannon_bg, cannon, rotation_angle, font);
 
-                avancar_bolinhas(map_info, ball_at_track, created_balls_at_track, 3);
+                advance_balls(map_info, ball_at_track, created_balls_at_track, 3);
 
-                desenhar_bolinhas(map_info, ball_at_track, created_balls_at_track);
+                draw_balls(map_info, ball_at_track, created_balls_at_track);
                 
                 al_flip_display();
 
@@ -869,7 +869,7 @@ int jogar(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *event_queue, ALLEGRO_FO
     free(map_info->tracks);
     free(map_info);
 
-    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função Jogar.");
+    write_log(DEBUG_LEVEL_ALL, true, "Deixando a função play.");
 
     return game_return_code;
 }

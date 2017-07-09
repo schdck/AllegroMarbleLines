@@ -109,7 +109,7 @@ RECORDE *read_list_from_file(const char file_nome[])
     return recordes;
 }
 
-void exibir_tela_pos_jogo(ALLEGRO_DISPLAY *display, int player_score, int player_level)
+void show_aftergame_screen(ALLEGRO_DISPLAY *display, int player_score, int player_level)
 {
     ALLEGRO_FONT *title_font = al_load_font("../font/default_font.ttf", 72, 0);
     ALLEGRO_FONT *normal_font = al_load_font("../font/default_font.ttf", 24, 0);
