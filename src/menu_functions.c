@@ -24,7 +24,7 @@ void draw_menu_images(int highlightIndex)
 
     //Desenhar fundo
     ALLEGRO_BITMAP *image = load_image(FUNDO_PATH); 
-    //al_draw_bitmap(image, 0, 0, 0);
+    al_draw_bitmap(image, 0, 0, 0);
     al_destroy_bitmap(image);
 
     // Desenhar o logo
