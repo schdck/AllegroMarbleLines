@@ -161,7 +161,7 @@ void show_game_screen(int X, int Y, ushort game_mode, ushort level, ushort start
     do
     {
         BALLS_SPEED = balls_speed + ((balls_speed / 4) * (LEVEL / 4));
-        BALLS_TO_COME = start_amout_of_balls + (20 * LEVEL);
+        BALLS_TO_COME = start_amout_of_balls + (5 * LEVEL);
         LEVEL++;
 
         prepare_for_level(LEVEL, 3, game_event_queue);
